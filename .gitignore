@@ -1,0 +1,17 @@
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Data pengguna dan rahasia
+backend/sigurame.db
+backend/uploads/
+backend/pengaturan_email.json
+
+# Model AI (terlalu besar untuk GitHub)
+backend/model/
+*.pth
+*.h5
+
+# macOS
+.DS_Store

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validator | SiGurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css?v=20261001">
+</head>
+<body data-role="validator">
+
+  <!-- Navbar validator -->
+  <header class="navbar navbar-validator">
+    <div class="container">
+      <a href="validator.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+        <small class="brand-tag">Validator</small>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="validator.html" class="active">Antrian konsultasi</a></li>
+        <li><a href="penyakit.html">Ensiklopedia</a></li>
+        <li><a href="index.html" class="btn btn-outline">Keluar</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <!-- Ringkasan -->
+    <section class="val-hero">
+      <div class="container">
+        <div class="val-hero-top">
+          <div>
+            <p class="val-greet" id="val-greet">Halo, Validator</p>
+            <h1>Antrian konsultasi</h1>
+            <p>Tinjau hasil scan dari pembudidaya, konfirmasi diagnosis, lalu kirim saran penanganan.</p>
+          </div>
+          <button type="button" class="btn btn-light" id="btn-seed">Muat data contoh</button>
+        </div>
+        <dl class="hist-stats val-stats">
+          <div><dt>Menunggu</dt><dd id="st-menunggu">0</dd></div>
+          <div><dt>Mendesak</dt><dd id="st-mendesak">0</dd></div>
+          <div><dt>Sudah divalidasi</dt><dd id="st-selesai">0</dd></div>
+          <div><dt>Kesesuaian model</dt><dd id="st-akurasi">–</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <div class="container val-body">
+      <!-- Antrian -->
+      <aside class="val-queue">
+        <div class="val-queue-head">
+          <div class="tabs val-tabs" role="tablist">
+            <button class="active" data-tab="menunggu" role="tab">Menunggu <span id="c-menunggu">0</span></button>
+            <button data-tab="selesai" role="tab">Selesai <span id="c-selesai">0</span></button>
+          </div>
+          <div class="val-search">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <label for="q" class="visually-hidden">Cari konsultasi</label>
+            <input type="search" id="q" placeholder="Cari nama, lokasi, atau catatan">
+          </div>
+        </div>
+        <ul id="queue-list" class="val-list"></ul>
+        <p id="queue-empty" class="val-empty hidden"></p>
+      </aside>
+
+      <!-- Detail & form -->
+      <section class="val-detail" aria-live="polite">
+        <div id="detail-empty" class="val-detail-empty">
+          <div class="konsul-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M4 5h16v10H8l-4 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          </div>
+          <h2>Pilih konsultasi</h2>
+          <p>Klik salah satu konsultasi di antrian untuk mulai meninjau.</p>
+        </div>
+
+        <div id="detail-body" class="hidden">
+          <header class="vd-head">
+            <div class="vd-user">
+              <span class="avatar vd-avatar" id="d-avatar">P</span>
+              <div>
+                <strong id="d-nama"></strong>
+                <small id="d-lokasi"></small>
+              </div>
+            </div>
+            <span class="vd-time" id="d-tanggal"></span>
+          </header>
+
+          <div class="vd-grid">
+            <div class="frame vd-photo">
+              <div class="frame-b"></div>
+              <img id="d-img" alt="Foto gurame dari pengguna">
+            </div>
+            <div class="vd-info">
+              <div class="vd-tags">
+                <span id="d-urgent" class="urgent-tag hidden">Mendesak</span>
+                <span id="d-demo" class="h-demo hidden">demo</span>
+              </div>
+              <p class="vd-label">Hasil model</p>
+              <h2 id="d-model"></h2>
+              <div class="h-conf" id="d-conf">
+                <div class="bar"><span id="d-conf-bar"></span></div>
+                <span id="d-conf-text"></span>
+              </div>
+              <p class="vd-label">Catatan pembudidaya</p>
+              <blockquote class="vd-note" id="d-note"></blockquote>
+            </div>
+          </div>
+
+          <form id="validasi-form" class="vd-form" novalidate>
+            <div class="vd-form-head">
+              <h3>Validasi</h3>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-setuju">Setuju dengan model</button>
+            </div>
+
+            <div class="field">
+              <label for="in-diagnosis">Diagnosis</label>
+              <select id="in-diagnosis" required></select>
+            </div>
+
+            <fieldset class="field" id="keparahan-field">
+              <legend>Tingkat keparahan</legend>
+              <div class="chips">
+                <label><input type="radio" name="keparahan" value="ringan"><span>Ringan</span></label>
+                <label><input type="radio" name="keparahan" value="sedang"><span>Sedang</span></label>
+                <label><input type="radio" name="keparahan" value="berat"><span>Berat</span></label>
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <div class="field-head">
+                <label for="in-pesan">Rekomendasi penanganan khusus</label>
+                <button type="button" id="btn-template" class="link-btn">Isi dari saran standar</button>
+              </div>
+              <textarea id="in-pesan" rows="6" required placeholder="Tulis rekomendasi penanganan khusus untuk pembudidaya."></textarea>
+            </div>
+
+            <div class="field">
+              <label for="in-nama">Nama validator</label>
+              <input type="text" id="in-nama" required placeholder="Misalnya: Budi, Penyuluh Perikanan Kab. Sidoarjo">
+            </div>
+
+            <div class="vd-submit">
+              <div id="form-msg"></div>
+              <button type="submit" class="btn btn-primary" id="btn-kirim">Kirim validasi</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast undo-toast hidden" id="val-toast" role="status"><p id="val-toast-text"></p></div>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="asset/js/data.js"></script>
+  <script src="asset/js/validator.js"></script>
+</body>
+</html>

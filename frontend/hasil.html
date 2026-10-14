@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hasil Deteksi | SiGurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css">
+  <style>
+    /* Pembayaran layanan validasi */
+    .pay-methods { display: grid; gap: .5rem; border: 0; padding: 0; margin: 0 0 1rem; }
+    .pay-methods legend { font-weight: 700; margin-bottom: .5rem; }
+    .pay-methods label { display: flex; align-items: center; gap: .6rem; padding: .75rem 1rem; border: 1.5px solid #dbe5ea; border-radius: 12px; cursor: pointer; font-weight: 600; }
+    .pay-methods label:has(input:checked) { border-color: var(--healthy); background: var(--teal-soft); }
+    .pay-methods input { accent-color: var(--healthy); }
+    #konsul-bayar .btn-primary { width: 100%; justify-content: center; }
+    .konsul-sub { font-size: .95rem; margin: .75rem 0 .5rem; color: var(--navy); }
+    .ketentuan { background: var(--bg); border-radius: var(--radius); padding: .75rem 1rem; margin: .5rem 0 1rem; font-size: .88rem; }
+    .ketentuan summary { font-weight: 700; cursor: pointer; }
+    .ketentuan ul { margin: .5rem 0 0 1.1rem; display: grid; gap: .3rem; color: var(--slate); }
+    .setuju { display: flex; gap: .5rem; align-items: flex-start; font-size: .9rem; margin: .25rem 0 1rem; cursor: pointer; }
+    .setuju input { margin-top: .2rem; accent-color: var(--healthy); }
+    .gateway { border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 1rem; margin-top: .75rem; display: grid; gap: .6rem; }
+    .gateway-head { font-weight: 800; color: var(--navy); }
+    .gateway-head span { font-size: .72rem; font-weight: 700; background: #fff4e0; color: var(--warning); padding: .1rem .5rem; border-radius: 99px; margin-left: .3rem; }
+    .gateway .btn-ghost { justify-self: center; }
+    .pay-note { font-size: .82rem; margin-top: .75rem; }
+    /* Jenis penyakit dalam satu kelas */
+    .jenis-chips { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: -1.25rem 0 2rem; color: #c9d9e7; font-size: .92rem; }
+    .jenis-chips button { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 99px; padding: .3rem .85rem; font: inherit; font-weight: 600; cursor: pointer; }
+    .jenis-chips button:hover { background: rgba(255,255,255,.2); }
+    .jenis-list { display: grid; gap: .75rem; }
+    .jenis-item { border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem 1.15rem; background: #fff; }
+    .jenis-item h3 { font-size: 1.05rem; margin-bottom: .1rem; }
+    .jenis-item .latin { font-style: italic; color: var(--slate); font-size: .85rem; margin-bottom: .45rem; }
+    .jenis-item p:last-child { font-size: .95rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="scan.html" class="active">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+        <li><a href="login.html" class="btn btn-outline">Masuk</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <!-- Belum ada hasil -->
+    <div id="no-result" class="container hidden">
+      <div class="empty result-empty">
+        <h2>Belum ada hasil scan</h2>
+        <p>Scan foto gurame dulu untuk melihat hasil deteksinya di sini.</p>
+        <a href="scan.html" class="btn btn-primary">Scan foto gurame</a>
+      </div>
+    </div>
+
+    <div id="result" class="hidden">
+      <!-- Ringkasan hasil -->
+      <section class="result-hero" id="status">
+        <div class="container result-hero-grid">
+          <div class="result-photo-card frame">
+            <div class="frame-b"></div>
+            <img id="result-img" alt="Foto gurame yang discan">
+          </div>
+
+          <div class="result-hero-text">
+            <p class="result-meta" id="result-date"></p>
+            <span id="demo-badge" class="demo-badge hidden">Mode demo: model belum dipasang di backend, hasil acak</span>
+            <h1 id="status-title">–</h1>
+            <p class="result-summary" id="summary"></p>
+            <div class="jenis-chips hidden" id="jenis-chips"></div>
+
+            <div class="gauge-row">
+              <div class="gauge" role="img" id="gauge" aria-label="Keyakinan model">
+                <svg viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="gauge-bg" cx="60" cy="60" r="52"/>
+                  <circle class="gauge-fg" id="gauge-fg" cx="60" cy="60" r="52"/>
+                </svg>
+                <span id="conf-text">0%</span>
+              </div>
+              <div class="gauge-text">
+                <strong>Keyakinan model</strong>
+                <p id="conf-desc"></p>
+              </div>
+            </div>
+
+            <div class="hero-actions">
+              <a href="scan.html" class="btn btn-primary">Scan foto lain</a>
+              <a id="detail-link" href="penyakit.html" class="btn btn-light">Detail penyakit</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="container result-body">
+        <!-- Kolom kiri: info & penanganan -->
+        <div class="result-main">
+          <div class="tabs result-tabs" role="tablist" id="result-tabs">
+            <button role="tab" data-tab="jenis" id="tab-jenis" class="hidden">Jenis penyakit</button>
+            <button role="tab" class="active" data-tab="penanganan" id="tab-penanganan">Penanganan</button>
+            <button role="tab" data-tab="gejala" id="block-gejala">Gejala</button>
+            <button role="tab" data-tab="info">Info</button>
+          </div>
+
+          <div class="tab-panel hidden" data-panel="jenis">
+            <h2>Kemungkinan jenis penyakit</h2>
+            <p class="muted" id="jenis-intro"></p>
+            <div class="jenis-list" id="jenis-list"></div>
+          </div>
+
+          <div class="tab-panel" data-panel="penanganan">
+            <h2 id="saran-title">Langkah penanganan awal</h2>
+            <p class="muted">Centang langkah yang sudah kamu lakukan.</p>
+            <ul class="todo" id="penanganan"></ul>
+            <div class="todo-progress"><div class="bar"><span id="todo-bar"></span></div><span id="todo-text"></span></div>
+          </div>
+
+          <div class="tab-panel hidden" data-panel="gejala">
+            <h2>Gejala yang biasa terlihat</h2>
+            <p class="muted">Cocokkan dengan kondisi ikanmu.</p>
+            <ul class="symptoms" id="gejala"></ul>
+          </div>
+
+          <div class="tab-panel hidden" data-panel="info">
+            <h2>Tentang hasil ini</h2>
+            <p>Hasil ini dibuat oleh model deteksi gambar dan merupakan deteksi awal, bukan diagnosis pasti. Akurasi dipengaruhi kualitas foto dan jenis penyakit yang pernah dipelajari model.</p>
+            <p>Jika banyak ikan menunjukkan gejala serupa atau kondisi memburuk, kirim konsultasi lanjutan atau hubungi penyuluh perikanan setempat.</p>
+          </div>
+        </div>
+
+        <!-- Kolom kanan: konsultasi -->
+        <aside class="result-side">
+          <section id="konsul" class="konsul-card">
+            <!-- 1. Ajukan validasi: info layanan + konfirmasi -->
+            <div id="konsul-belum">
+              <div class="konsul-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 5h16v10H8l-4 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+              </div>
+              <h3>Butuh pendapat ahli?</h3>
+              <p>Ajukan validasi agar penyuluh perikanan memeriksa hasil ini. Layanan berbayar, hasil scan tetap gratis.</p>
+              <button id="btn-konsul" class="btn btn-primary">Ajukan validasi</button>
+
+              <form id="konsul-form" class="hidden">
+                <h4 class="konsul-sub">Informasi layanan validasi</h4>
+                <dl class="konsul-dl">
+                  <dt>Biaya</dt><dd id="tarif-text">Rp25.000</dd>
+                  <dt>Estimasi waktu</dt><dd id="estimasi-text">Maksimal 1×24 jam</dd>
+                </dl>
+                <details class="ketentuan" open>
+                  <summary>Ketentuan layanan</summary>
+                  <ul id="ketentuan-list"></ul>
+                </details>
+                <div class="field">
+                  <label for="konsul-note">Ceritakan kondisi ikan (opsional)</label>
+                  <textarea id="konsul-note" rows="4" maxlength="500" placeholder="Misalnya: sudah 3 hari tidak mau makan, ada 5 ikan dengan gejala sama."></textarea>
+                  <small class="muted" id="note-count">0/500</small>
+                </div>
+                <div class="quick-tags" id="quick-tags">
+                  <button type="button">Tidak mau makan</button>
+                  <button type="button">Banyak ikan bergejala sama</button>
+                  <button type="button">Air kolam keruh</button>
+                  <button type="button">Ada ikan mati</button>
+                </div>
+                <label class="setuju"><input type="checkbox" id="konsul-setuju"> Saya sudah membaca dan menyetujui ketentuan layanan</label>
+                <div id="konsul-msg"></div>
+                <div class="scan-controls">
+                  <button type="submit" class="btn btn-primary">Konfirmasi pengajuan</button>
+                  <button type="button" id="btn-konsul-batal" class="btn btn-ghost">Batal</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 2. Pembayaran: pilih metode -> payment gateway -> berhasil / gagal -->
+            <div id="konsul-bayar" class="hidden">
+              <span class="pill pill-wait">Menunggu pembayaran</span>
+
+              <div id="pay-pilih">
+                <h3>Pilih metode pembayaran</h3>
+                <dl class="konsul-dl">
+                  <dt>Layanan</dt><dd>Validasi oleh penyuluh</dd>
+                  <dt>Total</dt><dd class="pay-total"></dd>
+                </dl>
+                <div id="pay-gagal" class="alert alert-error hidden"></div>
+                <fieldset class="pay-methods">
+                  <legend>Metode pembayaran</legend>
+                  <label><input type="radio" name="metode" value="qris"> QRIS</label>
+                  <label><input type="radio" name="metode" value="transfer"> Transfer bank</label>
+                  <label><input type="radio" name="metode" value="ewallet"> E-wallet</label>
+                </fieldset>
+                <div id="pay-msg"></div>
+                <button type="button" id="btn-lanjut-bayar" class="btn btn-primary">Lanjut bayar</button>
+              </div>
+
+              <div id="pay-gateway" class="hidden">
+                <div class="gateway">
+                  <p class="gateway-head">Payment gateway <span>simulasi</span></p>
+                  <dl class="konsul-dl">
+                    <dt>Kode transaksi</dt><dd id="pay-kode"></dd>
+                    <dt>Metode</dt><dd id="pay-metode"></dd>
+                    <dt>Total</dt><dd class="pay-total"></dd>
+                  </dl>
+                  <button type="button" id="btn-bayar-ok" class="btn btn-primary">Bayar</button>
+                  <button type="button" id="btn-bayar-gagal" class="btn btn-ghost btn-sm">Simulasikan pembayaran gagal</button>
+                </div>
+              </div>
+              <p class="muted pay-note">Simulasi: belum terhubung ke payment gateway asli, tidak ada uang yang ditarik.</p>
+            </div>
+
+            <!-- 3. Menunggu validasi -->
+            <div id="konsul-menunggu" class="hidden">
+              <span class="pill pill-wait"><span class="pulse"></span>Menunggu validasi</span>
+              <h3>Pembayaran berhasil</h3>
+              <p>Hasil scan sudah diteruskan ke penyuluh. Kamu akan dapat email dan tanda angka di menu Riwayat saat hasil validasi keluar.</p>
+              <p class="muted" id="konsul-sent"></p>
+              <p class="muted" id="konsul-lunas"></p>
+            </div>
+
+            <!-- 4. Hasil validasi -->
+            <div id="konsul-selesai" class="hidden">
+              <span class="pill pill-healthy">Validasi selesai</span>
+              <h3>Hasil dari validator</h3>
+              <p id="v-koreksi" class="alert alert-info hidden"></p>
+              <dl class="konsul-dl">
+                <dt>Diagnosis</dt><dd id="v-diagnosis"></dd>
+                <dt id="v-keparahan-label">Keparahan</dt><dd id="v-keparahan"></dd>
+                <dt>Validator</dt><dd id="v-nama"></dd>
+              </dl>
+              <h4 class="konsul-sub">Rekomendasi penanganan khusus</h4>
+              <div class="validator-msg" id="v-pesan"></div>
+              <p class="muted" id="v-tanggal"></p>
+              <p class="muted" id="v-bayar"></p>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <a href="index.html" class="brand"><b>Si<span>Gurame</span></b></a>
+      <ul class="footer-links">
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+      </ul>
+      <p class="footer-copy">© 2026 SiGurame, Sistem Informasi Gurame.</p>
+    </div>
+  </footer>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="asset/js/data.js"></script>
+  <script src="asset/js/hasil.js"></script>
+</body>
+</html>

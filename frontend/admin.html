@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | SiGurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css">
+  <style>
+    /* ---------- Halaman admin ---------- */
+    .adm-body { padding: 2rem 0 5rem; }
+    .adm-tabs { display: grid; grid-template-columns: repeat(3, 1fr); max-width: 560px; margin: 0 0 1.5rem; }
+    .adm-tabs span { display: inline-block; min-width: 1.4rem; margin-left: .3rem; padding: 0 .35rem; border-radius: 99px; background: var(--line); font-size: .78rem; line-height: 1.4rem; }
+    .adm-tabs button.active span { background: var(--navy); color: #fff; }
+    .adm-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.5rem; }
+    .adm-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .adm-toolbar .left { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+    .adm-input, .adm-select { border: 1.5px solid var(--line); border-radius: 99px; padding: .6rem 1rem; font: inherit; background: #fff; color: var(--ink); }
+    .adm-input { min-width: 240px; }
+    .adm-input:focus, .adm-select:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+    .adm-table-wrap { overflow-x: auto; }
+    .adm-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    .adm-table th { text-align: left; color: var(--slate); font-weight: 600; font-size: .82rem; padding: .6rem .75rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .adm-table td { padding: .75rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    .adm-table tr:last-child td { border-bottom: 0; }
+    .adm-table .muted { color: var(--slate); font-size: .85rem; }
+    .adm-table img { width: 56px; height: 42px; object-fit: cover; border-radius: 8px; display: block; }
+    .adm-table select { border: 1.5px solid var(--line); border-radius: 8px; padding: .35rem .5rem; font: inherit; background: #fff; }
+    .role-tag { display: inline-block; padding: .15rem .6rem; border-radius: 99px; font-size: .78rem; font-weight: 700; background: var(--water-soft); color: var(--water); }
+    .role-tag.validator { background: var(--teal-soft); color: var(--healthy); }
+    .role-tag.admin { background: #ece8fb; color: #5b4bb7; }
+    .pay-tag { display: inline-block; padding: .15rem .6rem; border-radius: 99px; font-size: .78rem; font-weight: 700; }
+    .pay-tag.lunas { background: var(--teal-soft); color: var(--healthy); }
+    .pay-tag.menunggu { background: #fff4e0; color: var(--warning); }
+    .pay-tag.gagal { background: var(--sick-soft); color: var(--sick); }
+    .adm-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 1rem; background: var(--bg); border-radius: var(--radius); padding: 1.25rem 1.25rem .25rem; margin-bottom: 1.25rem; }
+    .adm-form .actions { grid-column: 1 / -1; display: flex; gap: .75rem; align-items: center; margin-bottom: 1rem; }
+    .adm-empty { text-align: center; color: var(--slate); padding: 2rem 1rem; }
+    .adm-sum { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.25rem; color: var(--slate); font-size: .92rem; }
+    .adm-sum strong { color: var(--navy); font-family: var(--font-display); font-size: 1.15rem; }
+    @media (max-width: 640px) { .adm-input { min-width: 0; width: 100%; } .adm-panel { padding: 1rem; } }
+  </style>
+</head>
+<body data-role="validator">
+
+  <!-- Navbar admin -->
+  <header class="navbar navbar-validator">
+    <div class="container">
+      <a href="admin.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+        <small class="brand-tag">Admin</small>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="admin.html" class="active">Panel admin</a></li>
+        <li><a href="penyakit.html">Ensiklopedia</a></li>
+        <li><a href="index.html" class="btn btn-outline">Keluar</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="val-hero">
+      <div class="container">
+        <div class="val-hero-top">
+          <div>
+            <p class="val-greet" id="adm-greet">Halo, Admin</p>
+            <h1>Panel admin</h1>
+            <p>Kelola akun pengguna dan validator, pantau pemeriksaan, serta transaksi layanan validasi.</p>
+          </div>
+          <p class="val-greet" id="adm-model"></p>
+        </div>
+        <dl class="hist-stats val-stats">
+          <div><dt>Pembudidaya</dt><dd id="st-pembudidaya">0</dd></div>
+          <div><dt>Validasi menunggu</dt><dd id="st-menunggu">0</dd></div>
+          <div><dt>Pemeriksaan</dt><dd id="st-pemeriksaan">0</dd></div>
+          <div><dt>Pendapatan</dt><dd id="st-pendapatan">Rp0</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <div class="container adm-body">
+      <div class="tabs adm-tabs" role="tablist" id="adm-tabs">
+        <button class="active" data-tab="pengguna" role="tab">Pengguna <span id="c-pengguna">0</span></button>
+        <button data-tab="pemeriksaan" role="tab">Pemeriksaan <span id="c-pemeriksaan">0</span></button>
+        <button data-tab="transaksi" role="tab">Transaksi <span id="c-transaksi">0</span></button>
+      </div>
+
+      <!-- Pengguna -->
+      <section class="adm-panel" data-panel="pengguna">
+        <div class="adm-toolbar">
+          <div class="left">
+            <label for="q-user" class="visually-hidden">Cari pengguna</label>
+            <input type="search" id="q-user" class="adm-input" placeholder="Cari nama atau email">
+            <label for="f-role" class="visually-hidden">Filter role</label>
+            <select id="f-role" class="adm-select">
+              <option value="">Semua role</option>
+              <option value="pembudidaya">Pembudidaya</option>
+              <option value="validator">Validator</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-tambah">Tambah akun</button>
+        </div>
+
+        <form id="form-tambah" class="adm-form hidden" novalidate>
+          <div class="field"><label for="u-nama">Nama</label><input id="u-nama" required></div>
+          <div class="field"><label for="u-email">Email</label><input id="u-email" type="email" required></div>
+          <div class="field"><label for="u-pass">Kata sandi</label><input id="u-pass" type="password" minlength="8" required placeholder="Minimal 8 karakter"></div>
+          <div class="field">
+            <label for="u-role">Role</label>
+            <select id="u-role">
+              <option value="validator">Validator</option>
+              <option value="admin">Admin</option>
+              <option value="pembudidaya">Pembudidaya</option>
+            </select>
+          </div>
+          <div class="field"><label for="u-lokasi">Lokasi (opsional)</label><input id="u-lokasi"></div>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary btn-sm">Simpan akun</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-batal">Batal</button>
+            <div id="form-msg"></div>
+          </div>
+        </form>
+
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Scan</th><th>Validasi</th><th>Terdaftar</th><th></th></tr></thead>
+            <tbody id="tb-pengguna"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Pemeriksaan -->
+      <section class="adm-panel hidden" data-panel="pemeriksaan">
+        <div class="adm-toolbar">
+          <div class="left">
+            <label for="q-scan" class="visually-hidden">Cari pemeriksaan</label>
+            <input type="search" id="q-scan" class="adm-input" placeholder="Cari nama pengguna">
+            <label for="f-label" class="visually-hidden">Filter hasil</label>
+            <select id="f-label" class="adm-select"></select>
+          </div>
+          <div class="adm-sum" id="sum-label"></div>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>Foto</th><th>Pengguna</th><th>Hasil model</th><th>Keyakinan</th><th>Tanggal</th><th>Konsultasi</th><th>Diagnosis validator</th></tr></thead>
+            <tbody id="tb-pemeriksaan"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Transaksi -->
+      <section class="adm-panel hidden" data-panel="transaksi">
+        <div class="adm-sum" id="sum-transaksi"></div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th>Kode transaksi</th><th>Pengguna</th><th>Jumlah</th><th>Metode</th><th>Status</th><th>Dibuat</th><th>Dibayar</th></tr></thead>
+            <tbody id="tb-transaksi"></tbody>
+          </table>
+        </div>
+        <p class="muted" style="margin-top:1rem;font-size:.85rem">Pembayaran masih simulasi dan belum terhubung ke payment gateway.</p>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast undo-toast hidden" id="adm-toast" role="status"><p id="adm-toast-text"></p></div>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="asset/js/data.js"></script>
+  <script src="asset/js/admin.js"></script>
+</body>
+</html>

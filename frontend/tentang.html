@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tentang | SiGurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css?v=20261001">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html" class="active">Tentang</a></li>
+        <li><a href="login.html" class="btn btn-outline">Masuk</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="about-hero">
+      <div class="container about-hero-grid">
+        <div>
+          <h1>Deteksi dini penyakit gurame, langsung dari kolam.</h1>
+          <p>SiGurame membantu pembudidaya mengenali tanda penyakit pada gurame lewat foto, lalu menghubungkannya dengan penyuluh perikanan bila perlu kepastian.</p>
+        </div>
+        <img class="about-logo" src="asset/image/icon.png" alt="">
+      </div>
+    </section>
+
+    <!-- Latar belakang -->
+    <section class="about-section">
+      <div class="container about-split">
+        <div class="home-head">
+          <h2>Kenapa SiGurame dibuat</h2>
+        </div>
+        <div class="about-prose">
+          <p>Penyakit pada gurame sering baru disadari ketika sudah menyebar ke banyak ikan dalam satu kolam. Saat itu, kerugian sudah sulit dihindari.</p>
+          <p>Deteksi dini membantu pembudidaya bertindak lebih cepat: memisahkan ikan yang sakit, memperbaiki kualitas air, dan meminta pendapat ahli sebelum kondisi memburuk.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alur kerja -->
+    <section class="about-section about-white">
+      <div class="container">
+        <div class="home-head">
+          <h2>Cara kerjanya</h2>
+          <p>Dari foto sampai saran penanganan, dalam lima langkah.</p>
+        </div>
+        <div class="howto" id="howto">
+          <ol class="howto-steps" role="tablist" aria-label="Langkah cara kerja">
+            <li><button role="tab" aria-selected="true" data-step="0"><span class="hs-num">1</span><span class="hs-title">Foto ikan</span></button></li>
+            <li><button role="tab" aria-selected="false" data-step="1"><span class="hs-num">2</span><span class="hs-title">Cek kualitas</span></button></li>
+            <li><button role="tab" aria-selected="false" data-step="2"><span class="hs-num">3</span><span class="hs-title">Analisis model</span></button></li>
+            <li><button role="tab" aria-selected="false" data-step="3"><span class="hs-num">4</span><span class="hs-title">Hasil dan saran</span></button></li>
+            <li><button role="tab" aria-selected="false" data-step="4"><span class="hs-num">5</span><span class="hs-title">Validasi ahli</span></button></li>
+          </ol>
+
+          <div class="howto-panel" role="tabpanel" aria-live="polite">
+            <div class="howto-icon" id="howto-icon" aria-hidden="true"></div>
+            <p class="howto-count" id="howto-count">Langkah 1 dari 5</p>
+            <h3 id="howto-title"></h3>
+            <p class="howto-text" id="howto-text"></p>
+            <div class="howto-progress"><span id="howto-bar"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Spesifikasi model -->
+    <section class="about-section">
+      <div class="container">
+        <div class="home-head">
+          <h2>Tentang model</h2>
+          <p>Ringkasan model klasifikasi yang dipakai SiGurame.</p>
+        </div>
+        <!-- EDIT: isi sesuai model kamu -->
+        <dl class="spec-cards">
+          <div><dt>Arsitektur</dt><dd>[isi, misalnya MobileNetV2]</dd></div>
+          <div><dt>Jumlah data latih</dt><dd>[isi jumlah gambar]</dd></div>
+          <div><dt>Akurasi uji</dt><dd>[isi, misalnya 92%]</dd></div>
+          <div><dt>Sumber dataset</dt><dd>[isi sumber]</dd></div>
+        </dl>
+        <div class="class-list">
+          <h3>Kondisi yang dikenali</h3>
+          <ul id="class-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Aktor -->
+    <section class="about-section about-white">
+      <div class="container">
+        <div class="home-head">
+          <h2>Siapa yang memakai</h2>
+        </div>
+        <div class="actors">
+          <article>
+            <span class="actor-tag">Pengguna</span>
+            <h3>Pembudidaya gurame</h3>
+            <ul class="check-list">
+              <li>Scan foto ikan dan melihat hasil deteksi</li>
+              <li>Mengikuti checklist penanganan awal</li>
+              <li>Mengirim konsultasi lanjutan bila ragu</li>
+              <li>Melihat riwayat scan dan balasan validator</li>
+            </ul>
+            <a href="scan.html" class="btn btn-primary">Mulai scan</a>
+          </article>
+          <article>
+            <span class="actor-tag actor-tag-alt">Validator</span>
+            <h3>Penyuluh perikanan</h3>
+            <ul class="check-list">
+              <li>Meninjau antrian konsultasi dari pengguna</li>
+              <li>Mengonfirmasi atau mengoreksi hasil model</li>
+              <li>Menentukan tingkat keparahan</li>
+              <li>Mengirim pesan penanganan ke pengguna</li>
+            </ul>
+            <a href="validator.html" class="btn btn-outline">Halaman validator</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="about-section">
+      <div class="container about-split">
+        <div class="home-head">
+          <h2>Pertanyaan umum</h2>
+          <p>Hal yang paling sering ditanyakan tentang SiGurame.</p>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Apakah hasil scan bisa dijadikan diagnosis pasti?</summary>
+            <p>Tidak. Hasil SiGurame adalah deteksi awal. Untuk kepastian, gunakan fitur konsultasi lanjutan atau hubungi penyuluh perikanan setempat.</p>
+          </details>
+          <details>
+            <summary>Kenapa hasilnya bisa berbeda untuk ikan yang sama?</summary>
+            <p>Model sensitif terhadap kualitas foto. Pencahayaan, sudut, dan ketajaman bisa memengaruhi hasil. Ikuti panduan foto di halaman Scan agar hasil lebih konsisten.</p>
+          </details>
+          <details>
+            <summary>Bagaimana kalau ikan saya terkena penyakit yang tidak ada di daftar?</summary>
+            <p>Model hanya mengenali kondisi yang ada di data latihnya, jadi hasilnya bisa keliru. Kirim konsultasi lanjutan supaya penyuluh bisa memeriksa langsung.</p>
+          </details>
+          <details>
+            <summary>Apakah foto saya disimpan?</summary>
+            <p>Foto dan riwayat scan disimpan di server SiGurame dan hanya bisa dilihat dari akunmu. Validator hanya melihat foto yang kamu kirim lewat konsultasi lanjutan.</p>
+          </details>
+          <details>
+            <summary>Apakah SiGurame bisa dipakai di HP?</summary>
+            <p>Bisa. Tampilan menyesuaikan layar HP, dan halaman Scan bisa langsung memakai kamera.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tim -->
+    <section class="about-section about-white">
+      <div class="container">
+        <div class="home-head">
+          <h2>Tim pengembang</h2>
+          <p>[isi program studi dan institusi]</p>
+        </div>
+        <!-- EDIT: ganti nama dan peran anggota tim -->
+        <ul class="team">
+          <li><span class="avatar">A</span><strong>[Nama anggota]</strong><small>[Peran, misalnya Machine Learning]</small></li>
+          <li><span class="avatar">B</span><strong>[Nama anggota]</strong><small>[Peran, misalnya Frontend]</small></li>
+          <li><span class="avatar">C</span><strong>[Nama anggota]</strong><small>[Peran, misalnya Backend]</small></li>
+          <li><span class="avatar">D</span><strong>[Nama anggota]</strong><small>[Peran, misalnya UI/UX]</small></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <a href="index.html" class="brand"><b>Si<span>Gurame</span></b></a>
+      <ul class="footer-links">
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+      </ul>
+      <p class="footer-copy">© 2026 SiGurame, Sistem Informasi Gurame.</p>
+    </div>
+  </footer>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="asset/js/data.js"></script>
+  <script src="asset/js/tentang.js"></script>
+</body>
+</html>

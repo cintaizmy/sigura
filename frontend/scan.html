@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan Foto | SiGurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="scan.html" class="active">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+        <li><a href="login.html" class="btn btn-outline">Masuk</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="scan-hero">
+      <div class="container">
+        <h1>Scan foto gurame</h1>
+        <p>Pakai kamera langsung atau unggah foto. Kualitas foto dicek dulu sebelum dianalisis.</p>
+        <ol class="scan-steps" id="scan-steps">
+          <li class="active">Pilih foto</li>
+          <li>Mulai scan</li>
+          <li>Lihat hasil</li>
+        </ol>
+      </div>
+    </section>
+
+    <div class="container scan-main">
+      <div class="scan-card">
+        <!-- Pilihan mode -->
+        <div class="mode-switch" role="tablist" aria-label="Cara mengambil foto">
+          <button type="button" role="tab" class="active" data-mode="upload" aria-selected="true">Unggah foto</button>
+          <button type="button" role="tab" data-mode="camera" aria-selected="false">Kamera</button>
+          <span class="mode-pill" aria-hidden="true"></span>
+        </div>
+
+        <!-- Area utama -->
+        <div class="stage frame" id="stage" data-state="upload">
+          <div class="frame-b"></div>
+
+          <!-- Mode unggah -->
+          <label for="input-gallery" class="upload-target" id="upload-target">
+            <svg class="up-icon" viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M24 32V12m0 0l-8 8m8-8l8 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 30v6a4 4 0 0 0 4 4h20a4 4 0 0 0 4-4v-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <strong>Klik untuk pilih foto</strong>
+            <span>atau seret foto ke sini, atau tempel dengan Ctrl/Cmd + V</span>
+            <small>JPG atau PNG, maksimal 5 MB</small>
+          </label>
+
+          <!-- Mode kamera -->
+          <video id="video" playsinline muted></video>
+          <svg class="fish-guide" viewBox="0 0 400 220" aria-hidden="true">
+            <path d="M40 110 C 90 30, 250 20, 320 95 L 375 55 L 360 110 L 375 165 L 320 125 C 250 200, 90 190, 40 110 Z"
+                  fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="10 8" stroke-linejoin="round"/>
+            <circle cx="85" cy="100" r="7" fill="currentColor"/>
+          </svg>
+          <p class="guide-hint" id="guide-hint">Posisikan gurame di dalam garis</p>
+
+          <!-- Pratinjau & proses scan -->
+          <img id="preview" alt="Pratinjau foto gurame">
+          <div class="scan-line"></div>
+          <div class="scan-progress" id="loading">
+            <div class="bar"><span id="progress-bar"></span></div>
+            <span id="loading-text">Menganalisis foto…</span>
+          </div>
+        </div>
+
+        <input type="file" id="input-gallery" class="visually-hidden" accept="image/jpeg,image/png">
+        <input type="file" id="input-camera" class="visually-hidden" accept="image/*" capture="environment">
+
+        <!-- Kontrol mode kamera -->
+        <div class="stage-foot camera-foot" id="camera-foot">
+          <button type="button" class="shutter" id="btn-shutter" aria-label="Ambil foto"><span></span></button>
+        </div>
+
+        <!-- Kontrol setelah foto dipilih -->
+        <div class="stage-foot preview-foot" id="preview-foot">
+          <ul class="quality" id="quality" aria-label="Pengecekan kualitas foto"></ul>
+          <div class="scan-controls">
+            <button id="btn-reset" class="btn btn-ghost" type="button">Ganti foto</button>
+            <button id="btn-scan" class="btn btn-primary" type="button">Mulai scan</button>
+          </div>
+        </div>
+
+        <div id="message"></div>
+      </div>
+
+      <aside class="scan-aside">
+        <div class="panel">
+          <h2>Foto yang bagus</h2>
+          <ul class="do-list">
+            <li>Ikan menyamping, kepala sampai ekor masuk bingkai</li>
+            <li>Tempat terang, fokus tajam</li>
+            <li>Satu foto untuk satu ikan</li>
+          </ul>
+          <h2 class="dont-title">Hindari</h2>
+          <ul class="dont-list">
+            <li>Foto gelap, blur, atau goyang</li>
+            <li>Pantulan cahaya di permukaan air</li>
+            <li>Ikan terpotong atau terlalu kecil</li>
+          </ul>
+        </div>
+        <p class="aside-note">Hasil scan adalah deteksi awal. Setelah scan, kamu bisa meminta penyuluh mengecek lewat <strong>Konsultasi lanjutan</strong>.</p>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <a href="index.html" class="brand"><b>Si<span>Gurame</span></b></a>
+      <ul class="footer-links">
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+      </ul>
+      <p class="footer-copy">© 2026 SiGurame, Sistem Informasi Gurame.</p>
+    </div>
+  </footer>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="asset/js/data.js"></script>
+  <script src="asset/js/scan.js"></script>
+</body>
+</html>

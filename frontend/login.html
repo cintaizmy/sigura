@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masuk | SiGurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+        <li><a href="login.html" class="btn btn-outline">Masuk</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="auth">
+    <div class="auth-card">
+      <a href="index.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+      </a>
+
+      <div class="tabs" role="tablist">
+        <button class="active" data-tab="login" role="tab">Masuk</button>
+        <button data-tab="register" role="tab">Daftar</button>
+      </div>
+
+      <form id="form-login" novalidate>
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="login-pass">Kata sandi</label>
+          <input type="password" id="login-pass" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary">Masuk</button>
+      </form>
+
+      <form id="form-register" class="hidden" novalidate>
+        <div class="field">
+          <label for="reg-name">Nama lengkap</label>
+          <input type="text" id="reg-name" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="reg-email">Email</label>
+          <input type="email" id="reg-email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="reg-pass">Kata sandi</label>
+          <input type="password" id="reg-pass" required minlength="8" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label for="reg-lokasi">Lokasi kolam (opsional)</label>
+          <input type="text" id="reg-lokasi" autocomplete="address-level2" placeholder="Misalnya: Blitar">
+        </div>
+        <button type="submit" class="btn btn-primary">Buat akun</button>
+      </form>
+
+      <div id="auth-msg"></div>
+    </div>
+  </main>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="asset/js/login.js"></script>
+</body>
+</html>

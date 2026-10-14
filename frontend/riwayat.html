@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riwayat Scan | SiGurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css?v=20261001">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html" class="active">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+        <li><a href="login.html" class="btn btn-outline">Masuk</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="hist-hero">
+      <div class="container">
+        <h1>Riwayat scan</h1>
+        <p>Semua hasil scan dan konsultasi tersimpan di akunmu.</p>
+        <dl class="hist-stats" id="hist-stats">
+          <div><dt>Total scan</dt><dd id="st-total">0</dd></div>
+          <div><dt>Sehat</dt><dd id="st-sehat">0</dd></div>
+          <div><dt>Terindikasi penyakit</dt><dd id="st-sakit">0</dd></div>
+          <div><dt>Menunggu validasi</dt><dd id="st-tunggu">0</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <div class="container hist-body">
+      <div class="hist-toolbar" id="toolbar">
+        <div class="seg-filter" id="filter" role="radiogroup" aria-label="Filter riwayat"></div>
+        <div class="hist-tools">
+          <label for="sort" class="visually-hidden">Urutkan</label>
+          <select id="sort" class="hist-select">
+            <option value="baru">Terbaru dulu</option>
+            <option value="lama">Terlama dulu</option>
+          </select>
+          <button class="link-btn danger" id="btn-clear" type="button">Hapus semua</button>
+        </div>
+      </div>
+
+      <div id="history-list"></div>
+
+      <p id="filter-empty" class="hist-filter-empty hidden">Tidak ada riwayat untuk filter ini.</p>
+
+      <div id="empty" class="empty hist-empty hidden">
+        <h2>Riwayat masih kosong</h2>
+        <p>Setiap foto yang kamu scan akan tercatat di sini, lengkap dengan status konsultasinya.</p>
+        <a href="scan.html" class="btn btn-primary">Scan foto pertama</a>
+      </div>
+    </div>
+
+    <div class="toast undo-toast hidden" id="undo-toast" role="status">
+      <p>Riwayat dihapus.</p>
+      <button type="button" class="btn btn-light-dark" id="btn-undo">Urungkan</button>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <a href="index.html" class="brand"><b>Si<span>Gurame</span></b></a>
+      <ul class="footer-links">
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+      </ul>
+      <p class="footer-copy">© 2026 SiGurame, Sistem Informasi Gurame.</p>
+    </div>
+  </footer>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="asset/js/data.js"></script>
+  <script src="asset/js/riwayat.js"></script>
+</body>
+</html>

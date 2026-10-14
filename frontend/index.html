@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SiGurame | Cek Kesehatan Ikan Gurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active">Beranda</a></li>
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+        <li><a href="login.html" class="btn btn-outline">Masuk</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= HERO ================= -->
+    <section class="home-hero">
+      <div class="container home-hero-grid">
+        <div class="home-hero-text">
+          <h1>Arahkan kamera ke gurame, kenali penyakitnya lebih awal.</h1>
+          <p class="lead">SiGurame membaca foto ikanmu dan memberi tahu apakah gurame sehat atau menunjukkan tanda penyakit, lengkap dengan langkah penanganan pertama.</p>
+          <div class="hero-actions">
+            <a href="scan.html" class="btn btn-primary btn-lg">Scan foto gurame</a>
+            <a href="penyakit.html" class="btn btn-light btn-lg">Lihat daftar penyakit</a>
+          </div>
+          <p class="hero-note">Mengenali tiga kondisi: ikan sehat, infeksi bakteri, dan infeksi jamur.</p>
+        </div>
+
+        <!-- Mockup HP: foto bergeser + hasil berubah -->
+        <div class="phone-wrap">
+          <div class="phone" aria-hidden="true">
+            <div class="phone-screen">
+              <div class="phone-notch"></div>
+              <div class="phone-top">
+                <img src="asset/image/icon.png" alt="">
+                <span>Scan gurame</span>
+              </div>
+
+              <div class="phone-view">
+                <div class="frame phone-frame">
+                  <div class="frame-b"></div>
+                  <div class="slider">
+                    <div class="slider-track" id="slider-track">
+                      <img src="asset/image/guramesehat.jpg" alt=""
+                           data-status="sehat" data-label="Sehat" data-conf="94">
+                      <img src="asset/image/guramesakit.jpg" alt=""
+                           data-status="sakit" data-label="Infeksi bakteri" data-conf="87">
+                    </div>
+                  </div>
+                  <div class="scan-line"></div>
+                </div>
+              </div>
+
+              <div class="phone-sheet result-chip" id="demo-chip">
+                <div class="sheet-row">
+                  <div class="dot" id="demo-dot">✓</div>
+                  <div>
+                    <strong id="demo-label">Sehat</strong>
+                    <small id="demo-conf">Keyakinan model 94%</small>
+                  </div>
+                </div>
+                <div class="bar sheet-bar"><span id="demo-bar" style="width:94%"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="slide-dots" id="slider-dots" aria-label="Contoh hasil scan"></div>
+        </div>
+      </div>
+
+      <svg class="hero-wave" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 50 C 240 10, 480 90, 720 50 S 1200 10, 1440 50 L1440 90 L0 90 Z"></path>
+      </svg>
+    </section>
+
+    <!-- ================= CARA PAKAI ================= -->
+    <section class="home-section">
+      <div class="container">
+        <div class="home-head">
+          <h2>Tiga langkah, tanpa alat khusus</h2>
+          <p>Kamera HP sudah cukup. Hasilnya keluar dalam beberapa detik.</p>
+        </div>
+        <ol class="home-steps">
+          <li>
+            <span class="step-num">1</span>
+            <h3>Foto ikan dari samping</h3>
+            <p>Seluruh badan gurame masuk bingkai, dari kepala sampai ekor, di tempat yang terang.</p>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <h3>Unggah di halaman Scan</h3>
+            <p>Ambil langsung lewat kamera atau pilih foto dari galeri.</p>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <h3>Baca hasil dan sarannya</h3>
+            <p>Lihat status kesehatan, tingkat keyakinan model, dan langkah penanganan awal.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================= PENYAKIT ================= -->
+    <section class="home-section home-section-white">
+      <div class="container home-split">
+        <div class="home-head home-sticky">
+          <h2>Kondisi yang bisa dikenali</h2>
+          <p>Model dilatih untuk membedakan ikan sehat, infeksi bakteri, dan infeksi jamur pada gurame budidaya.</p>
+          <a href="penyakit.html" class="btn btn-outline">Buka ensiklopedia</a>
+        </div>
+        <ul class="home-diseases">
+          <li>
+            <a href="penyakit.html#bakteri">
+              <h3>Infeksi bakteri</h3>
+              <p>Termasuk bercak merah, perut kembung (dropsy), serta busuk sirip dan insang. Umumnya akibat bakteri Aeromonas.</p>
+            </a>
+          </li>
+          <li>
+            <a href="penyakit.html#jamur">
+              <h3>Infeksi jamur</h3>
+              <p>Termasuk saprolegniasis (lapisan putih seperti kapas), borok merah (EUS), dan busuk insang jamur.</p>
+            </a>
+          </li>
+          <li>
+            <a href="scan.html">
+              <h3>Sehat</h3>
+              <p>Tidak ada tanda infeksi. Warna tubuh, sirip, dan kulit ikan terlihat normal.</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================= KONSULTASI ================= -->
+    <section class="home-section">
+      <div class="container home-split home-konsul">
+        <div class="home-head">
+          <h2>Ragu dengan hasilnya? Minta penyuluh mengecek.</h2>
+          <p>Setelah scan, kirim foto dan catatan kondisi ikan ke validator (layanan berbayar). Balasannya berisi diagnosis, tingkat keparahan, dan langkah penanganan, lalu muncul di menu Riwayat.</p>
+          <p class="muted">Tidak wajib. Hasil scan tetap gratis, konsultasi dikenakan biaya Rp25.000.</p>
+        </div>
+
+        <!-- Contoh balasan validator -->
+        <div class="konsul-mock" aria-hidden="true">
+          <div class="mock-head">
+            <span class="pill pill-sick">Validator: Infeksi bakteri</span>
+            <span class="new-tag">Baru</span>
+          </div>
+          <dl class="konsul-dl">
+            <dt>Keparahan</dt><dd>Sedang</dd>
+            <dt>Validator</dt><dd>Penyuluh Perikanan</dd>
+          </dl>
+          <div class="validator-msg">1. Pisahkan ikan yang sakit ke wadah karantina.
+2. Ganti sebagian air kolam dan kurangi pakan sementara.
+3. Rendam dengan larutan garam ikan sesuai dosis anjuran.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CTA + TIPS ================= -->
+    <section class="home-cta">
+      <div class="container home-cta-grid">
+        <div>
+          <h2>Biar hasil scan akurat</h2>
+          <ul class="cta-tips">
+            <li>Foto di tempat terang, hindari bayangan dan pantulan air.</li>
+            <li>Ikan menyamping dan mengisi sebagian besar bingkai.</li>
+            <li>Fokus tajam, tidak blur atau goyang.</li>
+            <li>Satu foto untuk satu ikan.</li>
+          </ul>
+        </div>
+        <div class="cta-box">
+          <p>Siap memeriksa gurame di kolammu?</p>
+          <a href="scan.html" class="btn btn-primary btn-lg">Scan foto gurame</a>
+          <small>Hasil SiGurame adalah deteksi awal, bukan diagnosis pasti.</small>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <a href="index.html" class="brand"><b>Si<span>Gurame</span></b></a>
+      <ul class="footer-links">
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+      </ul>
+      <p class="footer-copy">© 2026 SiGurame, Sistem Informasi Gurame.</p>
+    </div>
+  </footer>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+</body>
+</html>

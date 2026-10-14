@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ensiklopedia Penyakit | SiGurame</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gurame</span></b>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html" class="active">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+        <li><a href="login.html" class="btn btn-outline">Masuk</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="ency-hero">
+      <div class="container">
+        <h1>Penyakit gurame</h1>
+        <p>Kenali gejala, penyebab, dan cara menangani penyakit yang paling sering menyerang gurame budidaya.</p>
+
+        <div class="ency-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <label for="search" class="visually-hidden">Cari penyakit</label>
+          <input type="search" id="search" placeholder="Cari nama penyakit atau gejala, misalnya: bintik putih">
+        </div>
+
+        <div class="cat-filter" id="cat-filter" role="radiogroup" aria-label="Filter penyebab"></div>
+      </div>
+    </section>
+
+    <div class="container ency-body">
+      <!-- Pencocok gejala (bisa dibuka-tutup) -->
+      <section class="matcher" id="matcher">
+        <button type="button" class="matcher-toggle" id="matcher-toggle" aria-expanded="false" aria-controls="matcher-panel">
+          <span class="matcher-title">
+            <strong>Cocokkan gejala</strong>
+            <small id="matcher-sub">Pilih gejala yang kamu lihat, penyakit paling cocok akan naik ke atas.</small>
+          </span>
+          <span class="matcher-badge hidden" id="matcher-badge">0</span>
+          <span class="chev" aria-hidden="true"></span>
+        </button>
+        <div class="matcher-panel" id="matcher-panel" hidden>
+          <div class="symptom-groups" id="symptom-chips"></div>
+          <div class="matcher-foot">
+            <button type="button" class="link-btn hidden" id="btn-clear-gejala">Hapus pilihan</button>
+            <button type="button" class="btn btn-primary" id="btn-apply">Lihat penyakit yang cocok</button>
+          </div>
+        </div>
+      </section>
+
+      <p class="ency-count" id="ency-count" aria-live="polite"></p>
+      <div class="disease-grid" id="disease-grid"></div>
+      <div id="no-match" class="empty hidden">
+        <h2>Tidak ada yang cocok</h2>
+        <p>Coba kata kunci lain, misalnya "luka" atau "bintik", atau hapus filter yang dipilih.</p>
+        <button type="button" class="btn btn-outline" id="btn-reset-filter">Reset pencarian</button>
+      </div>
+    </div>
+
+    <!-- Detail penyakit -->
+    <dialog class="drawer" id="drawer" aria-labelledby="d-nama">
+      <div class="drawer-inner">
+        <button type="button" class="drawer-close" id="drawer-close" aria-label="Tutup detail">×</button>
+        <div class="drawer-photo" id="d-photo"></div>
+        <div class="drawer-content">
+          <span class="pill" id="d-kategori"></span>
+          <h2 id="d-nama"></h2>
+          <p class="drawer-latin" id="d-latin"></p>
+          <p class="drawer-summary" id="d-ringkasan"></p>
+
+          <div class="tabs drawer-tabs" role="tablist" id="d-tabs">
+            <button role="tab" data-tab="jenis" id="d-tab-jenis">Jenis</button>
+            <button role="tab" class="active" data-tab="gejala">Gejala</button>
+            <button role="tab" data-tab="penyebab">Penyebab</button>
+            <button role="tab" data-tab="pencegahan">Pencegahan</button>
+            <button role="tab" data-tab="penanganan">Penanganan</button>
+          </div>
+          <ul class="drawer-list" id="d-list"></ul>
+
+          <div class="drawer-cta">
+            <p>Curiga ikanmu terkena penyakit ini?</p>
+            <a href="scan.html" class="btn btn-primary">Scan foto gurame</a>
+          </div>
+        </div>
+      </div>
+    </dialog>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <a href="index.html" class="brand"><b>Si<span>Gurame</span></b></a>
+      <ul class="footer-links">
+        <li><a href="scan.html">Scan</a></li>
+        <li><a href="penyakit.html">Penyakit</a></li>
+        <li><a href="riwayat.html">Riwayat</a></li>
+        <li><a href="tentang.html">Tentang</a></li>
+      </ul>
+      <p class="footer-copy">© 2026 SiGurame, Sistem Informasi Gurame.</p>
+    </div>
+  </footer>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="asset/js/data.js"></script>
+  <script src="asset/js/penyakit.js"></script>
+</body>
+</html>
