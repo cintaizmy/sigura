@@ -6,7 +6,9 @@
 // foto: nama file contoh di asset/image/ (tanpa .jpg)
 // =========================================================
 
-const PENYAKIT = {
+// Data bawaan, hanya dipakai kalau data dari backend (api/penyakit.js) tidak termuat.
+// Data yang dipakai sebenarnya dikelola admin di database.
+const PENYAKIT_BAWAAN = {
   sehat: {
     nama: "Sehat",
     latin: "",
@@ -126,6 +128,16 @@ const PENYAKIT = {
     ]
   }
 };
+
+const PENYAKIT = (window.PENYAKIT_DB && Object.keys(window.PENYAKIT_DB).length)
+  ? window.PENYAKIT_DB
+  : PENYAKIT_BAWAAN;
+
+// Alamat foto contoh penyakit: upload admin (uploads/...) atau file di asset/image/
+function fotoPenyakit(key) {
+  const f = (PENYAKIT[key] && PENYAKIT[key].foto) || key;
+  return f.includes("/") ? f : `asset/image/${f}.jpg`;
+}
 
 // Kelas yang bisa dideteksi model
 const KELAS_SCAN = Object.keys(PENYAKIT).filter(k => PENYAKIT[k].bisaScan);

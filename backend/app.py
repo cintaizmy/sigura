@@ -1,5 +1,5 @@
 """
-SiGurame - Backend Flask API
+SiGura - Backend Flask API
 Jalankan:  python app.py   lalu buka  http://127.0.0.1:5000
 
 Akun bawaan (dibuat otomatis saat pertama jalan):
@@ -8,6 +8,7 @@ Akun bawaan (dibuat otomatis saat pertama jalan):
 """
 
 import html as htmllib
+import re
 import json
 import os
 import random
@@ -48,9 +49,10 @@ ALLOWED_MIME = {"image/jpeg", "image/png"}
 # Nama = key di frontend/asset/js/data.js
 CLASSES = ["bakteri", "jamur", "sehat"]
 
-# Diagnosis tambahan yang boleh dipilih validator (tidak bisa dideteksi model)
-DIAGNOSIS_LAIN = ["white_spot", "kutu_ikan", "lainnya"]
-DIAGNOSIS_VALID = CLASSES + DIAGNOSIS_LAIN
+# Data penyakit (ensiklopedia) disimpan di tabel `penyakit` dan dikelola admin.
+# Isi awal diambil dari file penyakit_awal.json saat database pertama dibuat.
+PENYAKIT_AWAL_PATH = os.path.join(BASE_DIR, "penyakit_awal.json")
+FIELD_LIST = ("gejala", "penyebab", "pencegahan", "penanganan")
 
 # Layanan validasi berbayar (BR-03). Pembayaran masih simulasi, belum payment gateway.
 TARIF_VALIDASI = 25000
@@ -73,6 +75,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_SIZE + 1024 * 1024
+app.json.sort_keys = False   # pertahankan urutan data (misalnya urutan penyakit)
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET", "sigurame-dev-secret-ganti-saat-deploy-2026")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
 CORS(app)
@@ -114,6 +117,13 @@ CREATE TABLE IF NOT EXISTS konsultasi (
   dikirim TEXT NOT NULL,
   divalidasi TEXT,
   dibaca INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS penyakit (
+  key TEXT PRIMARY KEY,                       -- sama dengan label model (sehat, bakteri, jamur, ...)
+  urutan INTEGER NOT NULL DEFAULT 0,
+  bisa_scan INTEGER NOT NULL DEFAULT 0,       -- 1 = termasuk kelas model
+  data TEXT NOT NULL,                         -- JSON: nama, kategori, latin, ringkasan, gejala, ...
+  diubah TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS pembayaran (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -169,9 +179,21 @@ def init_db():
                                   WHERE p.id IS NULL AND k.status != 'menunggu_bayar'""").fetchall():
         conn.execute("INSERT INTO pembayaran (scan_id,kode,jumlah,metode,status,dibuat,dibayar) VALUES (?,?,?,?,?,?,?)",
                      (sid, kode_transaksi(), TARIF_VALIDASI, "qris", "lunas", now(), now()))
+    # --- Data penyakit awal ---
+    if not conn.execute("SELECT 1 FROM penyakit LIMIT 1").fetchone():
+        try:
+            with open(PENYAKIT_AWAL_PATH, encoding="utf-8") as f:
+                awal = json.load(f)
+        except (OSError, ValueError):
+            awal = {}
+        for i, (key, d) in enumerate(awal.items()):
+            bisa = 1 if key in CLASSES else 0
+            d = {k: v for k, v in d.items() if k != "bisaScan"}
+            conn.execute("INSERT INTO penyakit (key,urutan,bisa_scan,data,diubah) VALUES (?,?,?,?,?)",
+                         (key, i, bisa, json.dumps(d, ensure_ascii=False), now()))
     # --- Akun bawaan ---
     akun = [("Budi, Penyuluh Perikanan", "validator@sigurame.id", "validator123", "validator", "Sidoarjo"),
-            ("Admin SiGurame", "admin@sigurame.id", "admin123", "admin", None)]
+            ("Admin SiGura", "admin@sigurame.id", "admin123", "admin", None)]
     for nama, email, pw, role, lokasi in akun:
         if not conn.execute("SELECT 1 FROM users WHERE email=?", (email,)).fetchone():
             conn.execute("INSERT INTO users (nama,email,password_hash,role,lokasi,created_at) VALUES (?,?,?,?,?,?)",
@@ -193,7 +215,7 @@ def init_db():
 TORCH_CLASSES = ["Aeromoniasis", "Bacterial_gill_disease", "Bacterial_red_disease", "EUS",
                  "Healthy_Fish", "Parasitic_diseases", "Saprolegniasis_fungal", "Viral_white_tail"]
 # Kelas model -> label web (3 kelas). Peluang kelas dengan label sama dijumlahkan.
-# None = tidak termasuk 3 kelas SiGurame, diabaikan.
+# None = tidak termasuk 3 kelas SiGura, diabaikan.
 PETA_TORCH = {
     "Healthy_Fish": "sehat",
     "Saprolegniasis_fungal": "jamur",   # jamur air Saprolegnia
@@ -383,11 +405,63 @@ def hapus_file(names):
 
 
 # =========================================================
+# Data penyakit
+# =========================================================
+def semua_penyakit():
+    """Dict key -> data penyakit (urut), termasuk field bisaScan."""
+    out = {}
+    for r in db().execute("SELECT * FROM penyakit ORDER BY bisa_scan DESC, urutan, key"):
+        d = json.loads(r["data"])
+        d["bisaScan"] = bool(r["bisa_scan"])
+        out[r["key"]] = d
+    return out
+
+
+def diagnosis_valid():
+    return set(CLASSES) | {r["key"] for r in db().execute("SELECT key FROM penyakit")} | {"lainnya"}
+
+
+def nama_label(key):
+    if key == "lainnya":
+        return "Penyakit lain"
+    r = db().execute("SELECT data FROM penyakit WHERE key=?", (key,)).fetchone()
+    return json.loads(r["data"]).get("nama", key) if r else key
+
+
+def bersihkan_penyakit(b):
+    """Validasi dan rapikan isian form penyakit dari admin. Kembalikan (data, error)."""
+    nama = (b.get("nama") or "").strip()
+    if not nama:
+        return None, "Nama penyakit wajib diisi."
+    d = {
+        "nama": nama[:80],
+        "kategori": (b.get("kategori") or "").strip()[:40],
+        "latin": (b.get("latin") or "").strip()[:160],
+        "ringkasan": (b.get("ringkasan") or "").strip()[:800],
+    }
+    for f in FIELD_LIST:
+        v = b.get(f) or []
+        if isinstance(v, str):
+            v = v.split("\n")
+        d[f] = [x.strip()[:300] for x in v if x and x.strip()][:15]
+    jenis = []
+    for j in (b.get("jenis") or [])[:10]:
+        if isinstance(j, dict) and (j.get("nama") or "").strip():
+            jenis.append({"nama": j["nama"].strip()[:80], "latin": (j.get("latin") or "").strip()[:160],
+                          "ciri": (j.get("ciri") or "").strip()[:400]})
+    if jenis:
+        d["jenis"] = jenis
+    if not d["penanganan"]:
+        return None, "Isi minimal satu langkah penanganan."
+    return d, None
+
+
+# =========================================================
 # Email
 # Diatur lewat file backend/pengaturan_email.json, contoh:
 #   {"aktif": true, "host": "smtp.gmail.com", "port": 587,
 #    "user": "emailkamu@gmail.com", "password": "app password 16 huruf",
-#    "pengirim": "SiGurame <emailkamu@gmail.com>", "url_web": "http://127.0.0.1:5000"}
+#    "pengirim": "SiGura <emailkamu@gmail.com>", "url_web": "http://127.0.0.1:5000"}
 # Kalau file tidak ada atau "aktif": false, email hanya ditampilkan di Terminal.
 # =========================================================
 def email_cfg():
@@ -410,9 +484,9 @@ def email_html(judul, baris, tombol=None):
            if tombol else "")
     return f"""<div style="font-family:Arial,sans-serif;background:#f5f9fa;padding:24px">
   <div style="max-width:520px;margin:auto;background:#fff;border-radius:16px;padding:28px;color:#15395d">
-    <p style="margin:0 0 4px;color:#1a8580;font-weight:bold">SiGurame</p>
+    <p style="margin:0 0 4px;color:#1a8580;font-weight:bold">SiGura</p>
     <h2 style="margin:0 0 16px;font-size:20px">{judul}</h2>{isi}{btn}
-    <p style="margin:24px 0 0;font-size:12px;color:#6b84a6">Email ini dikirim otomatis oleh SiGurame. Mohon tidak membalas email ini.</p>
+    <p style="margin:24px 0 0;font-size:12px;color:#6b84a6">Email ini dikirim otomatis oleh SiGura. Mohon tidak membalas email ini.</p>
   </div></div>"""
 
 
@@ -420,7 +494,6 @@ def kirim_email(ke, subjek, baris, tombol=None):
     """Kirim email di latar belakang. Tidak pernah membuat request gagal."""
     if not ke or ke.endswith(DUMMY_DOMAIN):
         return
-    import re
     teks = "\n\n".join(htmllib.unescape(re.sub(r"<[^>]+>", "", b.replace("<br>", "\n"))) for b in baris)
     if tombol:
         teks += f"\n\n{tombol[0]}: {tombol[1]}"
@@ -460,10 +533,6 @@ def tgl_id(iso):
 
 def rupiah(n):
     return "Rp" + f"{int(n):,}".replace(",", ".")
-
-
-NAMA_LABEL = {"sehat": "Sehat", "bakteri": "Infeksi bakteri", "jamur": "Infeksi jamur",
-              "white_spot": "White spot", "kutu_ikan": "Kutu ikan", "lainnya": "Penyakit lain"}
 
 
 # =========================================================
@@ -516,8 +585,65 @@ def login():
 @app.get("/api/me")
 @jwt_required()
 def me():
+    """Profil akun yang login + statistik singkat sesuai role."""
     u = db().execute("SELECT * FROM users WHERE id=?", (uid(),)).fetchone()
-    return jsonify(user_json(u)) if u else err("Akun tidak ditemukan.", 404)
+    if not u:
+        return err("Akun tidak ditemukan.", 404)
+    one = lambda q: db().execute(q, (uid(),)).fetchone()[0]  # noqa: E731
+    if u["role"] == "validator":
+        stat = {
+            "validasi": one("SELECT COUNT(*) FROM konsultasi WHERE validator_id=? AND status='selesai'"),
+            "sesuai": one("""SELECT COUNT(*) FROM konsultasi k JOIN scans s ON s.id=k.scan_id
+                             WHERE k.validator_id=? AND k.status='selesai' AND k.diagnosis=s.label"""),
+            "bulan_ini": one("""SELECT COUNT(*) FROM konsultasi WHERE validator_id=? AND status='selesai'
+                                AND substr(divalidasi,1,7)=strftime('%Y-%m','now')"""),
+        }
+        stat["dikoreksi"] = stat["validasi"] - stat["sesuai"]
+    else:
+        stat = {
+            "scan": one("SELECT COUNT(*) FROM scans WHERE user_id=?"),
+            "konsultasi": one("SELECT COUNT(*) FROM konsultasi k JOIN scans s ON s.id=k.scan_id WHERE s.user_id=?"),
+            "divalidasi": one("""SELECT COUNT(*) FROM konsultasi k JOIN scans s ON s.id=k.scan_id
+                                 WHERE s.user_id=? AND k.status='selesai'"""),
+        }
+    return jsonify({**user_json(u), "created_at": u["created_at"], "statistik": stat})
+
+
+@app.put("/api/me")
+@jwt_required()
+def ubah_profil():
+    b = request.get_json(silent=True) or {}
+    nama = (b.get("nama") or "").strip()[:80]
+    email = (b.get("email") or "").strip().lower()[:120]
+    lokasi = (b.get("lokasi") or "").strip()[:80] or None
+    if not nama or not email:
+        return err("Nama dan email wajib diisi.")
+    if "@" not in email or "." not in email.split("@")[-1]:
+        return err("Format email belum benar.")
+    try:
+        db().execute("UPDATE users SET nama=?, email=?, lokasi=? WHERE id=?", (nama, email, lokasi, uid()))
+        db().commit()
+    except sqlite3.IntegrityError:
+        return err("Email sudah dipakai akun lain.", 409)
+    u = db().execute("SELECT * FROM users WHERE id=?", (uid(),)).fetchone()
+    return jsonify(user_json(u))
+
+
+@app.put("/api/me/password")
+@jwt_required()
+def ubah_password():
+    b = request.get_json(silent=True) or {}
+    lama, baru = b.get("lama") or "", b.get("baru") or ""
+    u = db().execute("SELECT password_hash FROM users WHERE id=?", (uid(),)).fetchone()
+    if not u or not check_password_hash(u["password_hash"], lama):
+        return err("Kata sandi lama salah.")
+    if len(baru) < 8:
+        return err("Kata sandi baru minimal 8 karakter.")
+    if baru == lama:
+        return err("Kata sandi baru harus berbeda dari yang lama.")
+    db().execute("UPDATE users SET password_hash=? WHERE id=?", (generate_password_hash(baru), uid()))
+    db().commit()
+    return jsonify({"message": "Kata sandi diperbarui."})
 
 
 # =========================================================
@@ -692,10 +818,19 @@ def bayar(sid):
         kirim_email(v["email"], "Konsultasi baru menunggu validasi", [
             f"Halo {esc(v['nama'].split(',')[0])},",
             f"Ada konsultasi baru dari <b>{esc(r['u_nama'])}</b>{' (' + esc(r['u_lokasi']) + ')' if r['u_lokasi'] else ''}. "
-            f"Hasil model: {NAMA_LABEL.get(r['label'], r['label'])} ({round(r['confidence'] * 100)}%).",
+            f"Hasil model: {nama_label(r['label'])} ({round(r['confidence'] * 100)}%).",
             f"Catatan pembudidaya: {esc(r['catatan_user'] or '-')}",
         ], ("Buka antrian konsultasi", url_web("validator.html")))
     return jsonify(e)
+
+
+@app.get("/api/validator/riwayat")
+@role_required("validator")
+def riwayat_validasi():
+    """Riwayat validasi yang sudah dilakukan validator yang login."""
+    rows = db().execute(ENTRY_SQL + " WHERE k.validator_id=? AND k.status='selesai' ORDER BY k.divalidasi DESC",
+                        (uid(),)).fetchall()
+    return jsonify([entry_json(r) for r in rows])
 
 
 @app.get("/api/validator/notifikasi")
@@ -746,7 +881,7 @@ def validasi(sid):
     nama = (b.get("validator_nama") or "").strip()
 
     kurang = []
-    if diagnosis not in DIAGNOSIS_VALID:
+    if diagnosis not in diagnosis_valid():
         kurang.append("diagnosis")
     if diagnosis != "sehat" and keparahan not in ("ringan", "sedang", "berat"):
         kurang.append("tingkat keparahan")
@@ -773,14 +908,14 @@ def validasi(sid):
     baris = [
         f"Halo {esc(r['u_nama'])},",
         f"Penyuluh sudah memeriksa hasil scan kamu tanggal {tgl_id(r['created_at'])}.",
-        f"Diagnosis: <b>{NAMA_LABEL.get(diagnosis, diagnosis)}</b>{kep}",
+        f"Diagnosis: <b>{nama_label(diagnosis)}</b>{kep}",
     ]
     if diagnosis != r["label"]:
-        baris.append(f"Catatan: penyuluh mengoreksi hasil model dari {NAMA_LABEL.get(r['label'], r['label'])} "
-                     f"menjadi {NAMA_LABEL.get(diagnosis, diagnosis)}.")
+        baris.append(f"Catatan: penyuluh mengoreksi hasil model dari {nama_label(r['label'])} "
+                     f"menjadi {nama_label(diagnosis)}.")
     baris.append("Rekomendasi penanganan khusus:<br>" + esc(pesan).replace("\n", "<br>"))
     baris.append(f"Divalidasi oleh {esc(nama)}.")
-    kirim_email(r["u_email"], "Hasil validasi SiGurame sudah keluar", baris,
+    kirim_email(r["u_email"], "Hasil validasi SiGura sudah keluar", baris,
                 ("Lihat hasil lengkap", url_web(f"hasil.html?id={sid}")))
     return jsonify(entry_json(r))
 
@@ -958,6 +1093,99 @@ def admin_pemeriksaan():
 def admin_transaksi():
     rows = db().execute(ENTRY_SQL + " WHERE p.id IS NOT NULL ORDER BY p.dibuat DESC").fetchall()
     return jsonify([entry_json(r) for r in rows])
+
+
+@app.get("/api/penyakit")
+def daftar_penyakit():
+    return jsonify(semua_penyakit())
+
+
+@app.get("/api/penyakit.js")
+def penyakit_js():
+    """Dimuat halaman web sebelum data.js, supaya ensiklopedia memakai data dari database."""
+    body = "window.PENYAKIT_DB = " + json.dumps(semua_penyakit(), ensure_ascii=False) + ";"
+    return app.response_class(body, mimetype="application/javascript", headers={"Cache-Control": "no-store"})
+
+
+@app.post("/api/admin/penyakit")
+@role_required("admin")
+def admin_tambah_penyakit():
+    b = request.get_json(silent=True) or {}
+    key = re.sub(r"[^a-z0-9]+", "_", (b.get("key") or b.get("nama") or "").strip().lower()).strip("_")[:40]
+    if not key:
+        return err("Kode penyakit tidak valid.")
+    if key == "lainnya" or db().execute("SELECT 1 FROM penyakit WHERE key=?", (key,)).fetchone():
+        return err(f"Kode '{key}' sudah dipakai. Gunakan nama atau kode lain.", 409)
+    d, e = bersihkan_penyakit(b)
+    if e:
+        return err(e)
+    urutan = db().execute("SELECT COALESCE(MAX(urutan),0)+1 FROM penyakit").fetchone()[0]
+    # Penyakit baru tidak bisa dideteksi model (model hanya mengenal CLASSES)
+    db().execute("INSERT INTO penyakit (key,urutan,bisa_scan,data,diubah) VALUES (?,?,0,?,?)",
+                 (key, urutan, json.dumps(d, ensure_ascii=False), now()))
+    db().commit()
+    return jsonify({"message": "Penyakit ditambahkan.", "key": key}), 201
+
+
+@app.put("/api/admin/penyakit/<key>")
+@role_required("admin")
+def admin_ubah_penyakit(key):
+    r = db().execute("SELECT data FROM penyakit WHERE key=?", (key,)).fetchone()
+    if not r:
+        return err("Penyakit tidak ditemukan.", 404)
+    d, e = bersihkan_penyakit(request.get_json(silent=True) or {})
+    if e:
+        return err(e)
+    foto = json.loads(r["data"]).get("foto")
+    if foto:
+        d["foto"] = foto
+    db().execute("UPDATE penyakit SET data=?, diubah=? WHERE key=?", (json.dumps(d, ensure_ascii=False), now(), key))
+    db().commit()
+    return jsonify({"message": "Penyakit diperbarui."})
+
+
+@app.post("/api/admin/penyakit/<key>/foto")
+@role_required("admin")
+def admin_foto_penyakit(key):
+    r = db().execute("SELECT data FROM penyakit WHERE key=?", (key,)).fetchone()
+    if not r:
+        return err("Penyakit tidak ditemukan.", 404)
+    f = request.files.get("file")
+    if not f or f.mimetype not in ALLOWED_MIME:
+        return err("Pilih foto JPG atau PNG.")
+    try:
+        img = Image.open(BytesIO(f.read()))
+        img.load()
+    except (UnidentifiedImageError, OSError):
+        return err("File bukan gambar yang valid.")
+    d = json.loads(r["data"])
+    lama = d.get("foto", "")
+    name = f"penyakit-{key}-{uuid.uuid4().hex[:6]}.jpg"
+    im = img.convert("RGB")
+    im.thumbnail((1000, 1000))
+    im.save(os.path.join(UPLOAD_DIR, name), "JPEG", quality=85)
+    d["foto"] = "uploads/" + name
+    db().execute("UPDATE penyakit SET data=?, diubah=? WHERE key=?", (json.dumps(d, ensure_ascii=False), now(), key))
+    db().commit()
+    if lama.startswith("uploads/"):
+        hapus_file([lama.split("/", 1)[1]])
+    return jsonify({"message": "Foto diperbarui.", "foto": d["foto"]})
+
+
+@app.delete("/api/admin/penyakit/<key>")
+@role_required("admin")
+def admin_hapus_penyakit(key):
+    if key in CLASSES:
+        return err("Kelas yang dideteksi model (sehat, bakteri, jamur) tidak bisa dihapus.")
+    r = db().execute("SELECT data FROM penyakit WHERE key=?", (key,)).fetchone()
+    if not r:
+        return err("Penyakit tidak ditemukan.", 404)
+    db().execute("DELETE FROM penyakit WHERE key=?", (key,))
+    db().commit()
+    foto = json.loads(r["data"]).get("foto", "")
+    if foto.startswith("uploads/"):
+        hapus_file([foto.split("/", 1)[1]])
+    return jsonify({"message": "Penyakit dihapus."})
 
 
 # =========================================================

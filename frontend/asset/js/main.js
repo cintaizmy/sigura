@@ -84,7 +84,7 @@ if (track) {
   const li = document.createElement("li");
   li.innerHTML = user.role === "validator" ? `<a href="validator.html">Halaman validator</a>`
     : user.role === "admin" ? `<a href="admin.html">Panel admin</a>`
-    : `<span style="opacity:.75">Hai, ${escapeNama(user.nama)}</span>`;
+    : `<a href="profil.html" title="Profil saya">Hai, ${escapeNama(user.nama)}</a>`;
   masuk.parentElement.before(li);
 
   masuk.textContent = "Keluar";

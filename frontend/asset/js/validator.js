@@ -28,7 +28,7 @@ function sapa() {
 $("in-nama").value = namaValidator();
 sapa();
 
-const pengguna = r => (r.konsultasi && r.konsultasi.pengguna) || { nama: "Pengguna SiGurame", lokasi: "" };
+const pengguna = r => (r.konsultasi && r.konsultasi.pengguna) || { nama: "Pengguna SiGura", lokasi: "" };
 const isMendesak = r => {
   const note = ((r.konsultasi && r.konsultasi.catatanUser) || "").toLowerCase();
   return r.konsultasi && r.konsultasi.status === "menunggu" && KATA_MENDESAK.some(k => note.includes(k));

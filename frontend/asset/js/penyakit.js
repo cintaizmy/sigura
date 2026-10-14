@@ -110,9 +110,8 @@ $("btn-apply").addEventListener("click", () => {
 
 // ---------- Kartu ----------
 function fotoHTML(key, nama) {
-  const file = (PENYAKIT[key] && PENYAKIT[key].foto) || key;
   return `
-    <img src="asset/image/${file}.jpg" alt="Contoh ${escapeHTML(nama)}" loading="lazy"
+    <img src="${fotoPenyakit(key)}" alt="Contoh ${escapeHTML(nama)}" loading="lazy"
          onerror="this.remove()">
     <div class="photo-fallback" aria-hidden="true"><img src="asset/image/icon.png" alt=""></div>`;
 }
@@ -205,7 +204,7 @@ function bukaDetail(key) {
   $("d-nama").textContent = p.nama;
   $("d-latin").textContent = p.latin;
   $("d-ringkasan").textContent = p.ringkasan + (p.bisaScan ? "" :
-    " Catatan: penyakit ini belum bisa dideteksi lewat scan SiGurame. Gunakan konsultasi lanjutan agar penyuluh memeriksa.");
+    " Catatan: penyakit ini belum bisa dideteksi lewat scan SiGura. Gunakan konsultasi lanjutan agar penyuluh memeriksa.");
   $("d-tabs").querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.tab === tabAktif));
   renderList();
 

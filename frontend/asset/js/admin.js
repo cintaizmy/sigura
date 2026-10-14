@@ -219,14 +219,127 @@ async function muatTransaksi() {
   renderTransaksi();
 }
 
+// ---------- Data penyakit ----------
+let penyakit = {};
+let editKey = null;   // null = tambah baru
+
+function renderPenyakit() {
+  const entri = Object.entries(penyakit);
+  $("c-penyakit").textContent = entri.length;
+  $("tb-penyakit").innerHTML = entri.length ? entri.map(([key, p]) => {
+    const foto = p.foto ? (p.foto.includes("/") ? p.foto : `asset/image/${p.foto}.jpg`) : `asset/image/${key}.jpg`;
+    return `
+      <tr>
+        <td><img src="${foto}" alt="" onerror="this.style.visibility='hidden'"></td>
+        <td><strong>${escapeHTML(p.nama)}</strong><div class="muted">${escapeHTML(p.latin || "")}</div></td>
+        <td>${escapeHTML(p.kategori || (key === "sehat" ? "-" : ""))}</td>
+        <td>${p.bisaScan ? `<span class="scan-tag ya">Ya (kelas model)</span>` : `<span class="scan-tag tidak">Tidak</span>`}</td>
+        <td class="muted">${(p.gejala || []).length} gejala · ${(p.penanganan || []).length} penanganan${p.jenis ? ` · ${p.jenis.length} jenis` : ""}</td>
+        <td style="white-space:nowrap">
+          <button type="button" class="link-btn" data-ubah="${key}">Ubah</button>
+          ${p.bisaScan ? "" : ` · <button type="button" class="link-btn danger" data-hapus-p="${key}">Hapus</button>`}
+        </td>
+      </tr>`;
+  }).join("") : kosong(6, "Belum ada data penyakit.");
+}
+
+async function muatPenyakit() {
+  penyakit = await api("/api/penyakit");
+  renderPenyakit();
+}
+
+function bukaFormPenyakit(key) {
+  editKey = key;
+  const p = key ? penyakit[key] : {};
+  $("fp-judul").textContent = key ? `Ubah: ${p.nama}` : "Tambah penyakit";
+  $("fp-nama").value = p.nama || "";
+  $("fp-kategori").value = p.kategori || "";
+  $("fp-latin").value = p.latin || "";
+  $("fp-ringkasan").value = p.ringkasan || "";
+  ["gejala", "penyebab", "pencegahan", "penanganan"].forEach(f => ($("fp-" + f).value = (p[f] || []).join("\n")));
+  $("fp-jenis").value = (p.jenis || []).map(j => [j.nama, j.latin, j.ciri].join(" | ")).join("\n");
+  $("fp-foto").value = "";
+  $("fp-msg").innerHTML = "";
+  $("form-penyakit").classList.remove("hidden");
+  $("form-penyakit").scrollIntoView({ behavior: "smooth", block: "start" });
+  $("fp-nama").focus();
+}
+
+function tutupFormPenyakit() {
+  $("form-penyakit").classList.add("hidden");
+  editKey = null;
+}
+
+$("btn-tambah-penyakit").addEventListener("click", () => bukaFormPenyakit(null));
+$("fp-batal").addEventListener("click", tutupFormPenyakit);
+
+$("tb-penyakit").addEventListener("click", async e => {
+  const ubah = e.target.closest("[data-ubah]");
+  if (ubah) return bukaFormPenyakit(ubah.dataset.ubah);
+  const hapus = e.target.closest("[data-hapus-p]");
+  if (!hapus) return;
+  const p = penyakit[hapus.dataset.hapusP];
+  if (!confirm(`Hapus data penyakit "${p.nama}"? Data ini hilang dari ensiklopedia dan pilihan diagnosis validator.`)) return;
+  try {
+    await api(`/api/admin/penyakit/${hapus.dataset.hapusP}`, { method: "DELETE" });
+    toast(`${p.nama} dihapus.`);
+    muatPenyakit();
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+$("form-penyakit").addEventListener("submit", async e => {
+  e.preventDefault();
+  const baris = id => $(id).value.split("\n").map(x => x.trim()).filter(Boolean);
+  const body = {
+    nama: $("fp-nama").value.trim(),
+    kategori: $("fp-kategori").value.trim(),
+    latin: $("fp-latin").value.trim(),
+    ringkasan: $("fp-ringkasan").value.trim(),
+    gejala: baris("fp-gejala"),
+    penyebab: baris("fp-penyebab"),
+    pencegahan: baris("fp-pencegahan"),
+    penanganan: baris("fp-penanganan"),
+    jenis: baris("fp-jenis").map(l => {
+      const [nama, latin, ciri] = l.split("|").map(x => (x || "").trim());
+      return { nama, latin, ciri };
+    })
+  };
+  const msg = $("fp-msg");
+  if (!body.nama || !body.penanganan.length) {
+    msg.innerHTML = `<div class="alert alert-error">Nama dan minimal satu langkah penanganan wajib diisi.</div>`;
+    return;
+  }
+  try {
+    let key = editKey;
+    if (key) {
+      await api(`/api/admin/penyakit/${key}`, { method: "PUT", body });
+    } else {
+      key = (await api("/api/admin/penyakit", { method: "POST", body })).key;
+    }
+    const file = $("fp-foto").files[0];
+    if (file) {
+      const form = new FormData();
+      form.append("file", file);
+      await api(`/api/admin/penyakit/${key}/foto`, { method: "POST", form });
+    }
+    toast(editKey ? `${body.nama} diperbarui.` : `${body.nama} ditambahkan.`);
+    tutupFormPenyakit();
+    muatPenyakit();
+  } catch (err) {
+    msg.innerHTML = `<div class="alert alert-error">${escapeHTML(err.message)}</div>`;
+  }
+});
+
 // ---------- Mulai ----------
 async function muatSemua() {
   try {
-    await Promise.all([muatRingkasan(), muatUsers(), muatScans(), muatTransaksi()]);
+    await Promise.all([muatRingkasan(), muatUsers(), muatScans(), muatTransaksi(), muatPenyakit()]);
   } catch (err) {
     toast(err.message);
   }
 }
 
 muatSemua();
-setInterval(muatSemua, 60000);
+setInterval(() => Promise.all([muatRingkasan(), muatScans(), muatTransaksi()]).catch(() => {}), 60000);

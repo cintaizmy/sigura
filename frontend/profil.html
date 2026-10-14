@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil | SiGura</title>
+  <link rel="icon" href="asset/image/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="asset/css/style.css">
+  <style>
+    /* ---------- Halaman profil ---------- */
+    .pf-body { padding: 2rem 0 5rem; display: grid; gap: 1.5rem; }
+    .pf-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.5rem; align-items: start; }
+    .pf-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.5rem; }
+    .pf-card h2 { font-size: 1.2rem; margin-bottom: .25rem; }
+    .pf-card > p.muted { margin-bottom: 1.25rem; font-size: .92rem; }
+    .pf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+    .pf-meta { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; color: var(--slate); font-size: .88rem; margin: -.25rem 0 1rem; }
+    .pf-meta strong { color: var(--navy); }
+    .pf-actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+    .role-tag { display: inline-block; padding: .15rem .6rem; border-radius: 99px; font-size: .78rem; font-weight: 700; background: var(--water-soft); color: var(--water); }
+    .role-tag.validator { background: var(--teal-soft); color: var(--healthy); }
+    .role-tag.admin { background: #ece8fb; color: #5b4bb7; }
+    .pf-table-wrap { overflow-x: auto; }
+    .pf-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    .pf-table th { text-align: left; color: var(--slate); font-weight: 600; font-size: .82rem; padding: .6rem .75rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .pf-table td { padding: .7rem .75rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    .pf-table tr:last-child td { border-bottom: 0; }
+    .pf-table img { width: 56px; height: 42px; object-fit: cover; border-radius: 8px; display: block; }
+    .pf-table .muted { color: var(--slate); font-size: .85rem; }
+    .pf-empty { text-align: center; color: var(--slate); padding: 2rem 1rem; }
+    .pf-toolbar { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: end; margin-bottom: 1rem; }
+    .pf-toolbar input, .pf-toolbar select { border: 1.5px solid var(--line); border-radius: 99px; padding: .55rem 1rem; font: inherit; background: #fff; color: var(--ink); }
+    @media (max-width: 860px) { .pf-grid, .pf-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar (isinya diatur profil.js sesuai role) -->
+  <header class="navbar" id="pf-navbar">
+    <div class="container">
+      <a href="index.html" class="brand" id="pf-brand">
+        <img src="asset/image/icon.png" alt="">
+        <b>Si<span>Gura</span></b>
+      </a>
+      <button class="nav-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      <ul class="nav-links" id="pf-links"></ul>
+    </div>
+  </header>
+
+  <main>
+    <section class="val-hero">
+      <div class="container">
+        <div class="val-hero-top">
+          <div>
+            <p class="val-greet"><span class="role-tag" id="pf-role">-</span></p>
+            <h1 id="pf-judul">Profil saya</h1>
+            <p id="pf-sub">Kelola informasi akun dan kata sandi.</p>
+          </div>
+        </div>
+        <dl class="hist-stats val-stats" id="pf-stats"></dl>
+      </div>
+    </section>
+
+    <div class="container pf-body">
+      <div class="pf-grid">
+        <!-- Informasi profil -->
+        <section class="pf-card">
+          <h2>Informasi profil</h2>
+          <p class="muted" id="pf-info"></p>
+          <div class="pf-meta" id="pf-meta"></div>
+          <form id="form-profil" novalidate>
+            <div class="pf-row">
+              <div class="field"><label for="pf-nama">Nama</label><input id="pf-nama" required autocomplete="name"></div>
+              <div class="field"><label for="pf-lokasi" id="pf-lokasi-label">Lokasi</label><input id="pf-lokasi" placeholder="Misalnya: Blitar"></div>
+            </div>
+            <div class="field"><label for="pf-email">Email</label><input id="pf-email" type="email" required autocomplete="email"></div>
+            <div id="profil-msg"></div>
+            <div class="pf-actions"><button type="submit" class="btn btn-primary">Simpan perubahan</button></div>
+          </form>
+        </section>
+
+        <!-- Kata sandi -->
+        <section class="pf-card">
+          <h2>Ubah kata sandi</h2>
+          <p class="muted">Minimal 8 karakter.</p>
+          <form id="form-sandi" novalidate>
+            <div class="field"><label for="pw-lama">Kata sandi lama</label><input id="pw-lama" type="password" autocomplete="current-password"></div>
+            <div class="field"><label for="pw-baru">Kata sandi baru</label><input id="pw-baru" type="password" autocomplete="new-password"></div>
+            <div class="field"><label for="pw-ulang">Ulangi kata sandi baru</label><input id="pw-ulang" type="password" autocomplete="new-password"></div>
+            <div id="sandi-msg"></div>
+            <div class="pf-actions"><button type="submit" class="btn btn-outline">Ubah kata sandi</button></div>
+          </form>
+        </section>
+      </div>
+
+      <!-- Riwayat validasi (khusus validator) -->
+      <section class="pf-card hidden" id="pf-riwayat">
+        <div class="pf-toolbar">
+          <div>
+            <h2>Riwayat validasi</h2>
+            <p class="muted" style="font-size:.92rem">Semua konsultasi yang sudah kamu validasi.</p>
+          </div>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+            <label for="rv-q" class="visually-hidden">Cari</label>
+            <input type="search" id="rv-q" placeholder="Cari nama pembudidaya">
+            <label for="rv-f" class="visually-hidden">Filter</label>
+            <select id="rv-f">
+              <option value="">Semua</option>
+              <option value="sesuai">Sesuai model</option>
+              <option value="koreksi">Dikoreksi</option>
+            </select>
+          </div>
+        </div>
+        <div class="pf-table-wrap">
+          <table class="pf-table">
+            <thead><tr><th>Foto</th><th>Pembudidaya</th><th>Hasil model</th><th>Diagnosis kamu</th><th>Keparahan</th><th>Divalidasi</th><th></th></tr></thead>
+            <tbody id="tb-riwayat"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast undo-toast hidden" id="pf-toast" role="status"><p id="pf-toast-text"></p></div>
+
+  <script src="asset/js/api.js"></script>
+  <script src="asset/js/main.js"></script>
+  <script src="api/penyakit.js"></script>
+  <script src="asset/js/data.js"></script>
+  <script src="asset/js/profil.js"></script>
+</body>
+</html>
