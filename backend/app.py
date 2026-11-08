@@ -37,17 +37,16 @@ from werkzeug.security import check_password_hash, generate_password_hash
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "sigurame.db")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-MODEL_PATH = os.path.join(BASE_DIR, "model", "model.h5")   # model Keras hasil training tim
-TORCH_PATH = os.path.join(BASE_DIR, "model", "model.pth")  # model PyTorch (uji coba)
+MODEL_DIR = os.path.join(BASE_DIR, "model")   # taruh 3 file .keras hasil training tim di sini
 
 IMG_SIZE = (224, 224)          # HARUS sama dengan ukuran input saat training
 MAX_SIZE = 5 * 1024 * 1024     # 5 MB
 ALLOWED_MIME = {"image/jpeg", "image/png"}
 
-# Kelas yang bisa dideteksi model (sesuai dokumen SRS).
-# Urutan HARUS sama dengan urutan kelas saat training (urut abjad nama folder dataset).
+# Kelas yang bisa dideteksi model.
+# Urutan HARUS sama dengan output model: index 0 = sehat, 1 = jamur, 2 = parasit (BUKAN urut abjad).
 # Nama = key di frontend/asset/js/data.js
-CLASSES = ["bakteri", "jamur", "sehat"]
+CLASSES = ["sehat", "jamur", "parasit"]
 
 # Data penyakit (ensiklopedia) disimpan di tabel `penyakit` dan dikelola admin.
 # Isi awal diambil dari file penyakit_awal.json saat database pertama dibuat.
@@ -119,7 +118,7 @@ CREATE TABLE IF NOT EXISTS konsultasi (
   dibaca INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS penyakit (
-  key TEXT PRIMARY KEY,                       -- sama dengan label model (sehat, bakteri, jamur, ...)
+  key TEXT PRIMARY KEY,                       -- sama dengan label model (sehat, jamur, parasit, ...)
   urutan INTEGER NOT NULL DEFAULT 0,
   bisa_scan INTEGER NOT NULL DEFAULT 0,       -- 1 = termasuk kelas model
   data TEXT NOT NULL,                         -- JSON: nama, kategori, latin, ringkasan, gejala, ...
@@ -191,6 +190,21 @@ def init_db():
             d = {k: v for k, v in d.items() if k != "bisaScan"}
             conn.execute("INSERT INTO penyakit (key,urutan,bisa_scan,data,diubah) VALUES (?,?,?,?,?)",
                          (key, i, bisa, json.dumps(d, ensure_ascii=False), now()))
+    # --- Kelas model baru (misalnya parasit) ditambahkan ke data penyakit yang sudah ada ---
+    try:
+        with open(PENYAKIT_AWAL_PATH, encoding="utf-8") as f:
+            awal = json.load(f)
+    except (OSError, ValueError):
+        awal = {}
+    for key in CLASSES:
+        if key in awal and not conn.execute("SELECT 1 FROM penyakit WHERE key=?", (key,)).fetchone():
+            d = {k: v for k, v in awal[key].items() if k != "bisaScan"}
+            conn.execute("INSERT INTO penyakit (key,urutan,bisa_scan,data,diubah) VALUES (?,?,1,?,?)",
+                         (key, CLASSES.index(key), json.dumps(d, ensure_ascii=False), now()))
+    # Tandai ulang mana yang termasuk kelas model (bakteri sekarang bukan kelas model)
+    conn.execute("UPDATE penyakit SET bisa_scan=0")
+    for i, key in enumerate(CLASSES):
+        conn.execute("UPDATE penyakit SET bisa_scan=1, urutan=? WHERE key=?", (i, key))
     # --- Akun bawaan ---
     akun = [("Budi, Penyuluh Perikanan", "validator@sigurame.id", "validator123", "validator", "Sidoarjo"),
             ("Admin SiGura", "admin@sigurame.id", "admin123", "admin", None)]
@@ -203,99 +217,71 @@ def init_db():
 
 
 # =========================================================
-# Model
-# Backend otomatis memakai model yang ada di folder backend/model/:
-#   - model.pth  -> model PyTorch (uji coba, VGG16 dari Hugging Face)
-#   - model.h5   -> model Keras/TensorFlow (model hasil training tim di Colab)
-# Kalau tidak ada keduanya, backend jalan di mode demo (hasil acak).
+# Model: ensemble 3 model Keras (soft voting), dibuat oleh Renata.
+# Taruh ketiga file di folder backend/model/:
+#   final_mobilenetv2.keras, final_resnet50.keras, final_efficientnetb0.keras
+# Kalau file belum lengkap atau TensorFlow belum terpasang, backend jalan di mode demo (hasil acak).
 # =========================================================
-
-# --- Model uji coba (PyTorch, 8 kelas) ---
-# Sumber: huggingface.co/spaces/mathaisjustin/fish-disease-detection-ai
-TORCH_CLASSES = ["Aeromoniasis", "Bacterial_gill_disease", "Bacterial_red_disease", "EUS",
-                 "Healthy_Fish", "Parasitic_diseases", "Saprolegniasis_fungal", "Viral_white_tail"]
-# Kelas model -> label web (3 kelas). Peluang kelas dengan label sama dijumlahkan.
-# None = tidak termasuk 3 kelas SiGura, diabaikan.
-PETA_TORCH = {
-    "Healthy_Fish": "sehat",
-    "Saprolegniasis_fungal": "jamur",   # jamur air Saprolegnia
-    "EUS": "jamur",                     # Aphanomyces invadans (jamur air / oomycete)
-    "Aeromoniasis": "bakteri",          # bakteri Aeromonas
-    "Bacterial_red_disease": "bakteri",
-    "Bacterial_gill_disease": "bakteri",
-    "Parasitic_diseases": None,
-    "Viral_white_tail": None,
+MODEL_FILES = {
+    "mobilenetv2": ("final_mobilenetv2.keras", "mobilenet_v2"),
+    "resnet50": ("final_resnet50.keras", "resnet50"),
+    "efficientnetb0": ("final_efficientnetb0.keras", "efficientnet"),
 }
 
-model = None
+models = {}          # nama -> (model, fungsi preprocess)
 model_jenis = "demo"
 
-if os.path.exists(TORCH_PATH):
+
+def muat_model():
+    global model_jenis
+    hilang = [f for f, _ in MODEL_FILES.values() if not os.path.exists(os.path.join(MODEL_DIR, f))]
+    if hilang:
+        print("[!] File model belum ada di backend/model/: " + ", ".join(hilang))
+        print("[!] Mode demo aktif (hasil acak).")
+        return
     try:
-        import torch
-        from torch import nn
-        from torchvision import models as tv_models, transforms
-
-        net = tv_models.vgg16(weights=None)
-        net.classifier[6] = nn.Linear(4096, len(TORCH_CLASSES))
-        net.load_state_dict(torch.load(TORCH_PATH, map_location="cpu", weights_only=True))
-        net.eval()
-        torch_tf = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        ])
-        model, model_jenis = net, "pytorch"
-        print(f"[OK] Model PyTorch dimuat: {TORCH_PATH}")
+        import tensorflow as tf
+        from tensorflow.keras import applications as apps
     except ImportError:
-        print("[!] Ada model.pth tapi PyTorch belum terpasang: pip install torch torchvision")
-    except Exception as e:
-        print(f"[!] Gagal memuat model.pth: {e}")
-
-if model is None and os.path.exists(MODEL_PATH):
-    try:
-        import tensorflow as tf  # noqa: E402
-        model, model_jenis = tf.keras.models.load_model(MODEL_PATH), "keras"
-        print(f"[OK] Model Keras dimuat: {MODEL_PATH}")
-    except ImportError:
-        print("[!] Ada model.h5 tapi TensorFlow belum terpasang: pip install tensorflow")
-
-if model is None:
-    print("[!] Model belum dipasang di folder backend/model/. Mode demo aktif (hasil acak).")
+        print("[!] TensorFlow belum terpasang: pip install tensorflow==2.21.0  (mode demo aktif)")
+        return
+    for nama, (file, modul) in MODEL_FILES.items():
+        path = os.path.join(MODEL_DIR, file)
+        m = tf.keras.models.load_model(path, compile=False)   # dimuat SEKALI saat server start
+        models[nama] = (m, getattr(apps, modul).preprocess_input)
+        print(f"[OK] Model dimuat: {file}")
+    model_jenis = "ensemble"
 
 
-def preprocess(img):
-    # Untuk model Keras. Sesuaikan dengan preprocessing saat training
-    # (VGG16: tf.keras.applications.vgg16.preprocess_input)
-    img = img.convert("RGB").resize(IMG_SIZE)
-    arr = np.asarray(img, dtype=np.float32) / 255.0
-    return np.expand_dims(arr, 0)
+muat_model()
+
+
+def siapkan_gambar(img):
+    """RGB, 224x224 NEAREST (sama dengan keras load_img saat training), float32 0-255, bentuk (1,224,224,3)."""
+    img = img.convert("RGB").resize(IMG_SIZE, Image.NEAREST)
+    return np.asarray(img, dtype=np.float32)[None, ...]
+
+
+def prediksi_ensemble(img):
+    """Rata-rata probabilitas 3 model (bobot sama). Return (probs_rata2, {nama_model: probs})."""
+    x = siapkan_gambar(img)
+    per_model = {}
+    for nama, (m, prep) in models.items():
+        # preprocess tiap model BERBEDA, jadi selalu pakai salinan array
+        per_model[nama] = np.asarray(m.predict(prep(x.copy()), verbose=0)[0], dtype=np.float64)
+    return np.mean(list(per_model.values()), axis=0), per_model
 
 
 def run_model(img):
-    if model is None:
+    if not models:
         return random.choice(CLASSES), round(random.uniform(0.7, 0.98), 4), True
-
-    if model_jenis == "pytorch":
-        with torch.no_grad():
-            x = torch_tf(img.convert("RGB")).unsqueeze(0)
-            probs = torch.softmax(model(x), dim=1)[0].tolist()
-        # Tampilkan hasil asli model di Terminal (untuk pengecekan)
-        urut = sorted(zip(TORCH_CLASSES, probs), key=lambda t: -t[1])[:3]
-        print("[model] " + ", ".join(f"{n} {p:.0%}" for n, p in urut))
-        skor = {}
-        for nama, p in zip(TORCH_CLASSES, probs):
-            label = PETA_TORCH.get(nama)
-            if label:
-                skor[label] = skor.get(label, 0) + p
-        total = sum(skor.values()) or 1
-        label = max(skor, key=skor.get)
-        return label, round(skor[label] / total, 4), False
-
-    probs = model.predict(preprocess(img), verbose=0)[0]
-    print("[model] " + ", ".join(f"{c} {p:.0%}" for c, p in zip(CLASSES, probs)))
-    i = int(np.argmax(probs))
-    return CLASSES[i], float(probs[i]), False
+    p, per_model = prediksi_ensemble(img)
+    # Tampilkan hasil tiap model di Terminal (untuk dicocokkan dengan notebook)
+    for nama, q in per_model.items():
+        print(f"[model] {nama:15s} " + ", ".join(f"{c} {v:.1%}" for c, v in zip(CLASSES, q)))
+    print("[model] ENSEMBLE        " + ", ".join(f"{c} {v:.1%}" for c, v in zip(CLASSES, p)))
+    i = int(p.argmax())
+    return CLASSES[i], round(float(p[i]), 4), False
 
 
 # =========================================================
@@ -956,20 +942,20 @@ def gambar_dummy(jenis):
 
 
 CONTOH = [
-    {"nama": "Pak Slamet", "lokasi": "Tulungagung", "label": "bakteri", "conf": 0.88, "jam": 2,
+    {"nama": "Pak Slamet", "lokasi": "Tulungagung", "label": "jamur", "conf": 0.68, "jam": 2, "foto": "bakteri",
      "catatan": "Ada 6 ikan dengan luka merah di badan, 2 ikan sudah mati kemarin. Air kolam agak keruh."},
-    {"nama": "Bu Rini", "lokasi": "Blitar", "label": "jamur", "conf": 0.71, "jam": 5, "foto": "white_spot",
+    {"nama": "Bu Rini", "lokasi": "Blitar", "label": "parasit", "conf": 0.86, "jam": 5, "foto": "white_spot",
      "catatan": "Bintik putih makin banyak sejak cuaca dingin. Ikan sering menggesekkan badan ke dinding kolam."},
     {"nama": "Mas Dodi", "lokasi": "Sidoarjo", "label": "jamur", "conf": 0.84, "jam": 26,
      "catatan": "Muncul lapisan putih di sirip setelah sortir panen minggu lalu."},
-    {"nama": "Pak Hadi", "lokasi": "Kediri", "label": "bakteri", "conf": 0.91, "jam": 50, "foto": "kembung",
+    {"nama": "Pak Hadi", "lokasi": "Kediri", "label": "jamur", "conf": 0.58, "jam": 50, "foto": "kembung",
      "catatan": "Perut ikan membesar, sisik berdiri, ikan diam di dasar kolam.",
      "validasi": ("bakteri", "berat",
                   "Gejala mengarah ke infeksi bakteri (dropsy).\n1. Segera pisahkan ikan yang perutnya membesar.\n2. Ganti sepertiga air kolam dan hentikan pakan 1 hari.\n3. Hubungi saya untuk pemeriksaan langsung minggu ini.")},
-    {"nama": "Bu Wati", "lokasi": "Lamongan", "label": "bakteri", "conf": 0.72, "jam": 74, "foto": "kutu_ikan",
+    {"nama": "Bu Wati", "lokasi": "Lamongan", "label": "parasit", "conf": 0.81, "jam": 74, "foto": "kutu_ikan",
      "catatan": "Ada titik merah kecil di kulit, ikan gelisah dan sering loncat.",
      "validasi": ("kutu_ikan", "sedang",
-                  "Dari foto terlihat kutu ikan (Argulus), bukan infeksi bakteri.\n1. Cabut kutu yang terlihat dengan pinset.\n2. Rendam ikan dengan larutan garam ikan sesuai dosis anjuran.\n3. Kuras dan keringkan kolam setelah panen.")},
+                  "Dari foto terlihat kutu ikan (Argulus).\n1. Cabut kutu yang terlihat dengan pinset.\n2. Rendam ikan dengan larutan garam ikan sesuai dosis anjuran.\n3. Kuras dan keringkan kolam setelah panen.")},
 ]
 
 
@@ -1176,7 +1162,7 @@ def admin_foto_penyakit(key):
 @role_required("admin")
 def admin_hapus_penyakit(key):
     if key in CLASSES:
-        return err("Kelas yang dideteksi model (sehat, bakteri, jamur) tidak bisa dihapus.")
+        return err("Kelas yang dideteksi model (sehat, jamur, parasit) tidak bisa dihapus.")
     r = db().execute("SELECT data FROM penyakit WHERE key=?", (key,)).fetchone()
     if not r:
         return err("Penyakit tidak ditemukan.", 404)
@@ -1219,4 +1205,5 @@ def file_frontend(path):
 init_db()  # dipanggil juga saat pakai `flask run` / gunicorn
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # use_reloader=False: model besar cukup dimuat sekali (tidak dimuat ulang tiap file berubah)
+    app.run(debug=True, port=5000, use_reloader=False)

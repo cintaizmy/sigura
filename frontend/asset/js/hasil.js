@@ -54,7 +54,7 @@ function renderHasil(data) {
 }
 
 // ---------- Jenis penyakit dalam kelas ----------
-// Model hanya membedakan 3 kelas (sehat, bakteri, jamur). Di sini ditampilkan
+// Model hanya membedakan 3 kelas (sehat, jamur, parasit). Di sini ditampilkan
 // jenis-jenis penyakit yang termasuk kelas tersebut agar pengguna bisa mencocokkan.
 function renderJenis(info) {
   if (!info.jenis || !info.jenis.length) return;
